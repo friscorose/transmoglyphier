@@ -1,0 +1,83 @@
+{
+  "family": "box art",
+  "face": "routing digits",
+  "block": "basic latin",
+  "weights":["regular"],
+  "version":0.1,
+  "code points": "\u0030-\u0039",
+  "fixed align": ["center", "bottom"],
+  "fixed lines": 2,
+  "fixed columns":2,
+  "character": {
+    "0": {
+      "glyph": {
+        "regular":[
+          "┌┐",
+          "└┛"
+        ]
+    },
+    "1": {
+      "glyph": {
+        "regular":[
+          "┐",
+          "╹"
+        ]
+      }
+    },
+    "2": {
+      "glyph": {
+        "regular":[
+          " 🭾",
+          "▕🮀"
+        ]
+      }
+    },
+    "3": {
+      "glyph": {
+        "regular":[
+          "🮀▏",
+          "🭿▍"
+        ]
+      }
+    },
+    "4": {
+      "glyph": [
+        "╻ ",
+        "┖┨"
+      ]
+    },
+    "5": {
+      "glyph": {
+        "regular":[
+          "▕🮀",
+          " 🭿"
+        ]
+      }
+    },
+    "6": {
+      "glyph": [
+        "🭼▁",
+        "🭼🭿"
+      ]
+    },
+    "7": {
+      "glyph": [
+        "▔🭾",
+        " 🭽"
+      ]
+    },
+    "8": {
+      "glyph": [
+        "🞐",
+        "⊔"
+      ]
+    },
+    "9": {
+      "glyph": [
+        "🞐",
+        "🭿"
+      ]
+    }
+  }
+}
+
