@@ -1,0 +1,9 @@
+EnGlyph {
+    width: 100%;
+	text-style:none;
+	text-align: right;
+}
+DataTable {
+    height: 16;
+    width: 48;
+}
