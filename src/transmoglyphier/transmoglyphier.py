@@ -4,7 +4,7 @@ from itertools import cycle
 from rich.text import Text
 
 from textual.app import App, ComposeResult
-from textual.widgets import DataTable, Label
+from textual.widgets import Button, DataTable, Label, TextArea
 
 from glyphs import EnGlyph
 
@@ -29,18 +29,23 @@ class DigitApp(App[None]):
         self.next_test()
 
     def compose(self) -> ComposeResult:
-        yield EnGlyph( "Hello", id="test_str")
+        test_string = "[red]He[/red]llo [blue]Wo[/blue][green]rld[/green]"
+        #yield EnGlyph( "Hello", Face="seven_segment", id="test_str")
+        yield EnGlyph( test_string, id="test_str")
+        yield Label( test_string )
         yield DataTable( zebra_stripes=True )
+        yield TextArea( test_string )
 
     def on_mount(self) -> None:
-        table = self.query_one(DataTable)
+        table = self.query_one("DataTable")
         header = ("name", "glyph", "Dec", "\\uJSON") 
         table.add_columns( *header )
         for ucp in range( 128 ):
             char = chr( ucp )
-            if char in string.printable:
+            #if char in string.printable:
+            if char in string.ascii_uppercase:
                 label = Text( char, style="#B0FC38 italic")
-                glyph = str( EnGlyph( char ) )
+                glyph = str( EnGlyph(char) )
                 row = ("name", glyph, ucp, "\\u{0:04x}".format(ucp) )
                 table.add_row(*row, height=3, label=label)
 
