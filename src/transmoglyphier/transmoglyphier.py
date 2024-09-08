@@ -8,13 +8,16 @@ from textual.widgets import Button, DataTable, Label, TextArea
 
 from glyphs import EnGlyph
 
+test_string = "[red]He[/red]llo [blue]Wo[/blue][green]rld[/green]"
+
 test_strings = cycle(
     [
         "The Five Boxing Wizards Jump Quickly",
         string.ascii_lowercase,
         string.ascii_uppercase,
         string.digits,
-        string.punctuation
+        string.punctuation,
+        test_string
     ]
 )
 class DigitApp(App[None]):
@@ -29,9 +32,9 @@ class DigitApp(App[None]):
         self.next_test()
 
     def compose(self) -> ComposeResult:
-        test_string = "[red]He[/red]llo [blue]Wo[/blue][green]rld[/green]"
         #yield EnGlyph( "Hello", Face="seven_segment", id="test_str")
-        yield EnGlyph( test_string, id="test_str")
+        yield EnGlyph( test_string, Family="box/serif", id="test_str")
+        #yield EnGlyph( "Xian Xylene Xenon xri xat xes xi", Family="box/serif", id="xtest_str")
         yield Label( test_string )
         yield DataTable( zebra_stripes=True )
         yield TextArea( test_string )
@@ -42,10 +45,9 @@ class DigitApp(App[None]):
         table.add_columns( *header )
         for ucp in range( 128 ):
             char = chr( ucp )
-            #if char in string.printable:
-            if char in string.ascii_uppercase:
+            if char in string.printable:
                 label = Text( char, style="#B0FC38 italic")
-                glyph = str( EnGlyph(char) )
+                glyph = str( EnGlyph(char, Family="box/serif") )
                 row = ("name", glyph, ucp, "\\u{0:04x}".format(ucp) )
                 table.add_row(*row, height=3, label=label)
 

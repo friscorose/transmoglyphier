@@ -1,6 +1,6 @@
 EnGlyph {
     color: yellow;
-	text-style:bold;
+	text-style:none;
 	text-align: right;
 }
 DataTable {
