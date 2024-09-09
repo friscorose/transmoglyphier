@@ -1,55 +1,76 @@
 import string
-from itertools import cycle
 
 from rich.text import Text
 
+from textual import on
 from textual.app import App, ComposeResult
-from textual.widgets import Button, DataTable, Label, TextArea
+from textual.containers import Horizontal, Vertical
+from textual.widgets import Button, DataTable, Label, Input
 
 from glyphs import EnGlyph
 
-test_string = "[red]He[/red]llo [blue]Wo[/blue][green]rld[/green]"
 
-test_strings = cycle(
-    [
+class DigitApp(App[None]):
+    DEFAULT_CSS = """
+    Vertical {
+        border-title-align: center;
+        border: solid white;
+    }
+    """
+    CSS_PATH = "transmoglyphier.tcss"
+
+    test_string = "[red]He[/red]llo [blue]Wo[/blue][green]rld[/green]"
+    test_list = [
         "The Five Boxing Wizards Jump Quickly",
+        #"Xian Xylene Xenon xri xat xes xi",
         string.ascii_lowercase,
         string.ascii_uppercase,
         string.digits,
         string.punctuation,
         test_string
-    ]
-)
-class DigitApp(App[None]):
-    CSS_PATH = "transmoglyphier.tcss"
-
-    def next_test(self) -> None:
-        glyphed = self.query_one( "#test_str" )
-        next_string =  next(test_strings)
-        glyphed.update( next_string )
-
-    def on_click(self) -> None:
-        self.next_test()
+        ]
 
     def compose(self) -> ComposeResult:
-        #yield EnGlyph( "Hello", Face="seven_segment", id="test_str")
-        yield EnGlyph( test_string, Family="box/serif", id="test_str")
-        #yield EnGlyph( "Xian Xylene Xenon xri xat xes xi", Family="box/serif", id="xtest_str")
-        yield Label( test_string )
-        yield DataTable( zebra_stripes=True )
-        yield TextArea( test_string )
+        self.input = Input(self.test_string) 
+        self.table = DataTable(zebra_stripes=True)
+        #yield EnGlyph( "Hello", Face="seven_segment", id="test_glyphs")
+        with (vertical := Vertical()):
+            vertical.border_title = self.test_string
+            with Horizontal():
+                yield Button("↻", id="cycle_glyphs")
+                yield EnGlyph( self.test_string, Family="box/serif", id="test_glyphs")
+            with Horizontal():
+                yield Button("Test", id="render_str")
+                yield self.input
+        yield Label( "Unicode Explorer" )
+        yield self.table
 
     def on_mount(self) -> None:
-        table = self.query_one("DataTable")
-        header = ("name", "glyph", "Dec", "\\uJSON") 
-        table.add_columns( *header )
+        header = ("name", "Dec", "\\uJSON") 
+        self.table.add_columns( *header )
         for ucp in range( 128 ):
             char = chr( ucp )
             if char in string.printable:
                 label = Text( char, style="#B0FC38 italic")
-                glyph = str( EnGlyph(char, Family="box/serif") )
-                row = ("name", glyph, ucp, "\\u{0:04x}".format(ucp) )
-                table.add_row(*row, height=3, label=label)
+                row = ("name", ucp, "\\u{0:04x}".format(ucp) )
+                self.table.add_row(*row, height=3, label=label)
+
+    def show_tests( self ) -> None:
+        if self.input.value not in self.test_list:
+            self.test_list.append( self.input.value )
+        self.query_one("Vertical").border_title = self.input.value
+        self.query_one("#test_glyphs").update(self.input.value)
+
+    @on( Button.Pressed )
+    def do_button_act( self, event ) -> None:
+        if event.button.id == "render_str":
+            self.show_tests()
+
+        elif event.button.id == "cycle_glyphs":
+            self.input.value = self.test_list.pop(0)
+            self.show_tests()
+
+
 
 app = DigitApp()
 if __name__ == "__main__":

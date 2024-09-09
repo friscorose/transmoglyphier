@@ -249,7 +249,7 @@
     "4": {
       "glyph": {
         "normal":[
-          "  ╷",
+          "╷ ╷",
           "╰─┤",
           "  ╵"
         ],
@@ -1284,7 +1284,7 @@
     },
     "~": {
       "lines": 1,
-      "align": ["center", "top"],
+      "align": ["center", "middle"],
       "glyph": {
         "normal":[
           "╭─╯"
