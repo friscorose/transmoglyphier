@@ -75,7 +75,7 @@ class DigitApp(App[None]):
             self.show_tests()
 
         elif event.button.id == "set_face":
-            self.t_glyph.load_glyphs( Face="deco", Family="box/art" )
+            self.t_glyph.load_glyphs( Face="deco_caps", Family="box/art" )
             self.query_one("#face_type").update( self.t_glyph.Face )
             self.show_tests()
 
