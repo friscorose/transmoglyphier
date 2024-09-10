@@ -5,7 +5,7 @@
   "_code points": "\u0020-\u007e",
   "_version":0.1,
   "_family": "box art",
-  "_face": "dec",
+  "_face": "deco_caps",
   "monospace":false,
   "tracking":1,
   "adjacent pairs":["LY", "QU"],
@@ -13,6 +13,14 @@
   "fixed columns":3,
   "fixed lines": 3,
   "character": {
+    " ":{
+      "kerning":false,
+      "glyph": [
+        "   ",
+        "   ",
+        "   "
+      ]
+    },
     "A": {
       "glyph": [
         "╓─╮",
