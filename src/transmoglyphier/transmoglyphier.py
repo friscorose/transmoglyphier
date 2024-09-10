@@ -33,15 +33,19 @@ class DigitApp(App[None]):
     def compose(self) -> ComposeResult:
         self.input = Input(self.test_string) 
         self.table = DataTable(zebra_stripes=True)
+        self.t_glyph = EnGlyph( self.test_string, Family="box/serif", id="test_glyphs")
         #yield EnGlyph( "Hello", Face="seven_segment", id="test_glyphs")
         with (vertical := Vertical()):
             vertical.border_title = self.test_string
             with Horizontal():
                 yield Button("↻", id="cycle_glyphs")
-                yield EnGlyph( self.test_string, Family="box/serif", id="test_glyphs")
+                yield self.t_glyph
             with Horizontal():
                 yield Button("Test", id="render_str")
                 yield self.input
+            with Horizontal():
+                yield Button("Face", id="set_face")
+                yield EnGlyph( self.t_glyph.Face, id="face_type")
         yield Label( "Unicode Explorer" )
         yield self.table
 
@@ -59,7 +63,7 @@ class DigitApp(App[None]):
         if self.input.value not in self.test_list:
             self.test_list.append( self.input.value )
         self.query_one("Vertical").border_title = self.input.value
-        self.query_one("#test_glyphs").update(self.input.value)
+        self.t_glyph.update(self.input.value)
 
     @on( Button.Pressed )
     def do_button_act( self, event ) -> None:
@@ -70,6 +74,10 @@ class DigitApp(App[None]):
             self.input.value = self.test_list.pop(0)
             self.show_tests()
 
+        elif event.button.id == "set_face":
+            self.t_glyph.load_glyphs( Face="deco", Family="box/art" )
+            self.query_one("#face_type").update( self.t_glyph.Face )
+            self.show_tests()
 
 
 app = DigitApp()

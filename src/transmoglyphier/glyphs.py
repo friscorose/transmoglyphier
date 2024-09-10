@@ -41,9 +41,13 @@ class EnGlyph( Static ):
         jFace = False
         face_path = 'glyphs/' + Family + "/" + Face + ".json"
         glyph_assets = glyphsource.files()
-        glyph_face = glyph_assets.joinpath( "assets", face_path ).read_bytes()
-        jFace = json.loads( glyph_face )
-        return jFace
+        try:
+            glyph_face = glyph_assets.joinpath( "assets", face_path ).read_bytes()
+            jFace = json.loads( glyph_face )
+            self.Face = Face
+            self.Family = Family
+        finally:
+            return jFace
 
     #def load_glyphs(self, Face="seven_segment", Family="box/sans") -> None:
     def load_glyphs(self, Face: str, Family: str) -> None:
