@@ -6,3 +6,6 @@ DataTable {
     height: 16;
     width: auto;
 }
+#face_type {
+    width: 32;
+}

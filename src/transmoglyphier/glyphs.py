@@ -27,7 +27,7 @@ class EnGlyph( Static ):
 
     def __init__( self, *args, **kwargs ) -> None:
         self.Face = kwargs.pop('Face', "basic_latin")
-        self.Family = kwargs.pop('Family', "box/sans")
+        self.Family = kwargs.pop('Family', "block/sans")
         super().__init__( *args, **kwargs )
         self._cache = None
         self.load_glyphs(self.Face, self.Family)
@@ -49,7 +49,7 @@ class EnGlyph( Static ):
         finally:
             return jFace
 
-    #def load_glyphs(self, Face="seven_segment", Family="box/sans") -> None:
+    #def load_glyphs(self, Face="seven_segment", Family="block/sans") -> None:
     def load_glyphs(self, Face: str, Family: str) -> None:
         self.GLYPHS = self._load_jFace( Face, Family )
         fallback = self.GLYPHS.get('block', Face).replace(" ", "_")

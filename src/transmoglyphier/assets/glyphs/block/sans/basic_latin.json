@@ -3,7 +3,7 @@
   "block": "basic latin",
   "_code points": "\u0020-\u007e",
   "_version":0.1,
-  "_family": "box sans",
+  "_family": "block sans",
   "_face": "basic_latin",
   "monospace":false,
   "tracking":1,
@@ -188,9 +188,9 @@
     },
     "/":{
       "glyph": [
-        "  ╻",
-        "┏━┛",
-        "╹  "
+        "  ╱",
+        " ╱ ",
+        "╱  "
       ]
     },
     "0": {

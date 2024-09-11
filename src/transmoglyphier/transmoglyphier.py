@@ -5,12 +5,12 @@ from rich.text import Text
 from textual import on
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
-from textual.widgets import Button, DataTable, Label, Input
+from textual.widgets import Header, Footer, Button, DataTable, Label, Input
 
 from glyphs import EnGlyph
 
 
-class DigitApp(App[None]):
+class Transmoglyphier(App[None]):
     DEFAULT_CSS = """
     Vertical {
         border-title-align: center;
@@ -21,20 +21,21 @@ class DigitApp(App[None]):
 
     test_string = "[red]He[/red]llo [blue]Wo[/blue][green]rld[/green]"
     test_list = [
-        "The Five Boxing Wizards Jump Quickly",
-        #"Xian Xylene Xenon xri xat xes xi",
-        string.ascii_lowercase,
         string.ascii_uppercase,
+        string.ascii_lowercase,
         string.digits,
         string.punctuation,
+        "The Five Boxing Wizards Jump Quickly",
+        #"Xian Xylene Xenon xri xat xes xi",
         test_string
         ]
 
     def compose(self) -> ComposeResult:
         self.input = Input(self.test_string) 
         self.table = DataTable(zebra_stripes=True)
-        self.t_glyph = EnGlyph( self.test_string, Family="box/serif", id="test_glyphs")
+        self.t_glyph = EnGlyph( self.test_string, Family="block/serif", id="test_glyphs")
         #yield EnGlyph( "Hello", Face="seven_segment", id="test_glyphs")
+        yield Header()
         with (vertical := Vertical()):
             vertical.border_title = self.test_string
             with Horizontal():
@@ -46,7 +47,9 @@ class DigitApp(App[None]):
             with Horizontal():
                 yield Button("Face", id="set_face")
                 yield EnGlyph( self.t_glyph.Face, id="face_type")
-        yield Label( "Unicode Explorer" )
+                yield Button("Family", id="set_family")
+                yield EnGlyph( self.t_glyph.Family, id="family_type")
+        yield Label( "Code Pt Cruizer" )
         yield self.table
 
     def on_mount(self) -> None:
@@ -75,11 +78,11 @@ class DigitApp(App[None]):
             self.show_tests()
 
         elif event.button.id == "set_face":
-            self.t_glyph.load_glyphs( Face="deco_caps", Family="box/art" )
+            self.t_glyph.load_glyphs( Face="deco_caps", Family="block/art" )
             self.query_one("#face_type").update( self.t_glyph.Face )
             self.show_tests()
 
 
-app = DigitApp()
+app = Transmoglyphier()
 if __name__ == "__main__":
     app.run()

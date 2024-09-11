@@ -1,5 +1,5 @@
 {
-  "family": "box serif",
+  "family": "block serif",
   "face": "base 10 digits",
   "block": "basic latin",
   "weights":["regular", "bold"],

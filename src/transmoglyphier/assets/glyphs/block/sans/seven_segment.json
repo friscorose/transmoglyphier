@@ -3,7 +3,7 @@
   "block": "basic latin",
   "_code points": "\u0041-\u005a,\u0061-\u007a,",
   "_version":0.1,
-  "_family": "box sans",
+  "_family": "block sans",
   "_face": "seven_segment",
   "monospace":true,
   "tracking":0,
