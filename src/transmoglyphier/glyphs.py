@@ -21,7 +21,7 @@ class EnGlyph( Static ):
     """Renders a wXh unicode glyph 'font' for input token characters."""
     DEFAULT_CSS = """
     EnGlyph {
-        height: 3;
+        height: auto;
     }
 	""" 
 
@@ -31,6 +31,11 @@ class EnGlyph( Static ):
         super().__init__( *args, **kwargs )
         self._cache = None
         self.load_glyphs(self.Face, self.Family)
+
+    def get_content_height(self, container:size, viewport: size, width:int ) -> int:
+        self.height = self.GLYPHS['fixed lines']
+        return self.height
+
 
     def render_line(self, row:int ) -> Strip:
         if self._cache != self._renderable:
@@ -84,9 +89,16 @@ class EnGlyph( Static ):
             self._strips.append( Strip(line) )
 
 
-    def _prechunk(self):
-        """A chunk list is useful for inline styling, line wrapping
-        and word splits of glyph based text"""
+    def _prechunk(self) -> None:
+
+        """ _prechunk is an internal method for converting the segments of
+        input text (possibly console markup) as produced by the Static widget
+        setter for a renderable from init or update. This method takes no
+        arguments, populates an internal chunk list and returns no data. A
+        chunk is a vertically oriented list of segments. A chunk list is a
+        horizontally oriented list and is useful for possible inline styling,
+        line wrapping and word splits of glyph based text."""
+
         self._last_token = " "
         a_con = Console()
         self._chunk_list = []
@@ -98,10 +110,12 @@ class EnGlyph( Static ):
         self._chunks_to_strips()
 
     def en_glyph(self, text: str, style: StyleType = "" ) -> list:
-        """Engine to layout glyph strings in supercell
+        
+        """
+        Engine to layout character strings in a glyph supercell.
 
         Returns a vertical pile of segments (chunk) that are the 2D
-        block of glyphs representing the input text.
+        supercell of glyphs representing the input text.
         """
 
         try:
@@ -113,6 +127,11 @@ class EnGlyph( Static ):
             faces_data = self.GLYPHS['character']
         except:
             raise Exception("missing required glyph face data")
+
+        #need logic to set these for > 3 row glyphs
+        bbox_cap_row = 0
+        bbox_x_row = 1
+        bbox_base_row = 2
 
         g_strings: list[str] = ['']*bbox_height
         chunk = []
@@ -127,7 +146,8 @@ class EnGlyph( Static ):
             face = faces_data.get(token, default)
             Thint = face.get('tracking', bbox_tracking)
             #Special char pairs that have no proportional spacing 
-            bbox_apairs = self.GLYPHS.get('adjacent pairs',[])
+            bbox_apairs = self.GLYPHS.get('adjacent',[])
+            bbox_aapairs = self.GLYPHS.get('antiadjacent',[])
             #determine if the glyphs are placed in fixed width 
             Mhint = face.get('monospace', bbox_monospace)
             #Determine vertical number of cells for the glyphs
@@ -171,6 +191,8 @@ class EnGlyph( Static ):
                     wedge = math.ceil( Thint )
                 else:
                     wedge = math.ceil( Thint - last_Whint )
+                if self._last_token+token in bbox_aapairs:
+                    wedge += 1
                 if wedge > 0:
                     if Ahint[0] == "left":
                         r_pad += wedge
@@ -204,8 +226,18 @@ class EnGlyph( Static ):
             #process next token or loop finished
 
         assert len(g_strings) == bbox_height, "Too many rows in glyph stack!"
-        for g_string in g_strings:
-            chunk.append( Segment(g_string, style) )
+        for g_row, g_string in enumerate(g_strings):
+            g_style = style
+            if g_style and g_style.overline and g_row != bbox_cap_row:
+                g_style = g_style + Style(overline = False)
+            if g_style and g_style.strike and g_row != bbox_x_row:
+                g_style = g_style + Style(strike = False)
+            if g_style and g_row != bbox_base_row:
+                if g_style.underline:
+                    g_style = g_style + Style(underline = False)
+                if g_style.underline2:
+                    g_style = g_style + Style(underline2 = False)
+            chunk.append( Segment(g_string, g_style) )
 
         assert len(chunk) == bbox_height, "Too many segments in chunk!"
         #log( repr(chunk) )

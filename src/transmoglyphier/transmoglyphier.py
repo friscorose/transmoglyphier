@@ -46,9 +46,9 @@ class Transmoglyphier(App[None]):
                 yield self.input
             with Horizontal():
                 yield Button("Face", id="set_face")
-                yield EnGlyph( self.t_glyph.Face, id="face_type")
+                yield EnGlyph( self.t_glyph.Face, Family="block/serif", id="face_type")
                 yield Button("Family", id="set_family")
-                yield EnGlyph( self.t_glyph.Family, id="family_type")
+                yield EnGlyph( self.t_glyph.Family, Family="block/serif", id="family_type")
         yield Label( "Code Pt Cruizer" )
         yield self.table
 
@@ -80,6 +80,7 @@ class Transmoglyphier(App[None]):
         elif event.button.id == "set_face":
             self.t_glyph.load_glyphs( Face="deco_caps", Family="block/art" )
             self.query_one("#face_type").update( self.t_glyph.Face )
+            self.query_one("#family_type").update( self.t_glyph.Family )
             self.show_tests()
 
 
