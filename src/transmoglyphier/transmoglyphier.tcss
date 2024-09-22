@@ -4,7 +4,7 @@ EnGlyph {
 }
 DataTable {
     height: 16;
-    width: auto;
+    width: 100%;
 }
 #face_type {
     width: 32;

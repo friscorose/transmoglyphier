@@ -5,16 +5,24 @@ from rich.text import Text
 from textual import on
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
-from textual.widgets import Header, Footer, Button, DataTable, Label, Input
+from textual.strip import Strip
+from textual.widgets import Static, Header, Footer, Button, DataTable, Label, Input
 
 from glyphs import EnGlyph
 
+class Glyphograph( Static ):
+    def render_line( self ) -> Strip:
+        pass
 
 class Transmoglyphier(App[None]):
     DEFAULT_CSS = """
     Vertical {
         border-title-align: center;
         border: solid white;
+    }
+    #cruizer {
+        border: solid blue;
+        width: 33%;
     }
     """
     CSS_PATH = "transmoglyphier.tcss"
@@ -49,8 +57,9 @@ class Transmoglyphier(App[None]):
                 yield EnGlyph( self.t_glyph.Face, Family="block/serif", id="face_type")
                 yield Button("Family", id="set_family")
                 yield EnGlyph( self.t_glyph.Family, Family="block/serif", id="family_type")
-        yield Label( "Code Pt Cruizer" )
-        yield self.table
+        with Vertical( id="cruizer" ):
+            yield Button( "Code Pt Cruizer", id="select_blocks" )
+            yield self.table
 
     def on_mount(self) -> None:
         header = ("name", "Dec", "\\uJSON") 
@@ -61,6 +70,12 @@ class Transmoglyphier(App[None]):
                 label = Text( char, style="#B0FC38 italic")
                 row = ("name", ucp, "\\u{0:04x}".format(ucp) )
                 self.table.add_row(*row, height=3, label=label)
+
+    def toggle_choose_blocks_panel( self ) -> None:
+        pass
+
+    def toggle_test_panel( self ) -> None:
+        pass
 
     def show_tests( self ) -> None:
         if self.input.value not in self.test_list:
@@ -82,6 +97,9 @@ class Transmoglyphier(App[None]):
             self.query_one("#face_type").update( self.t_glyph.Face )
             self.query_one("#family_type").update( self.t_glyph.Family )
             self.show_tests()
+
+        elif event.button.id == "select_blocks":
+            self.toggle_choose_blocks_panel()
 
 
 app = Transmoglyphier()
