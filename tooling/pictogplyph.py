@@ -1,43 +1,21 @@
-from rich_pixels import Pixels
-from rich_pixels import Renderer
-from rich_pixels import HalfcellRenderer
+from rich_pixels import Pixels, Renderer
+from typing import Callable, Tuple
 
 from rich.console import Console
 from rich.segment import Segment
 from rich.style import Style
 
+from PIL import Image, ImageDraw, ImageFont
 import string
-import PIL.Image
-import PIL.ImageDraw
-import PIL.ImageFont
 
-from typing import Callable, Tuple
 
 RGBA = Tuple[int, int, int, int]
 GetPixel = Callable[[Tuple[int, int]], RGBA]
 
-class StrToPixels( Pixels ):
-
-    @staticmethod
-    def from_string(
-            phrase: str = "A",
-            font_path: str = "./DepartureMono-Regular.woff"
-            ) -> Pixels:
-
-        font = PIL.ImageFont.truetype( font_path, size=11 )
-        l,t,r,b = font.getbbox( phrase )
-        pane = PIL.Image.new( '1', (r,b) )
-        canvas = PIL.ImageDraw.Draw( pane )
-        mask = [x for x in font.getmask(phrase, mode='1')]
-        pane.putdata(mask)
-        segments = Pixels._segments_from_image(pane, (r,b), renderer=SextantcellRenderer() )
-
-        return Pixels.from_segments(segments)
-
 class SextantcellRenderer( Renderer ):
     """ Render to Block Sextant in Symbols for Legacy Computing Unicode block """
 
-    def render( self, image: PIL.Image, resize: tuple[int, int] | None) -> list[Segment]:
+    def render( self, image: Image, resize: tuple[int, int] | None) -> list[Segment]:
         target_height = resize[1] if resize else image.size[1]
         if target_height % 3 != 0:
             target_height += 1
@@ -51,8 +29,6 @@ class SextantcellRenderer( Renderer ):
         if image.size[0] != target_width or image.size[1] != target_height:
             resize = (target_width, target_height)
 
-        #cons.print( "renderer" )
-        #not perfect... maybe
         return super().render(image, resize)
 
     def _get_range(self, height: int) -> range:
@@ -61,10 +37,8 @@ class SextantcellRenderer( Renderer ):
     def _render_line(
             self, *, line_index: int, width: int, get_pixel: GetPixel
             ) -> list[Segment]:
-        #cons.print( "render line of "+str(width) )
         line = []
         for x in range(0, width, 2):
-           # cons.print( "render line of "+str(width) + " at " + str( x ) )
             line.append(self._render_sextantcell(x=x, y=line_index, get_pixel=get_pixel))
         return line
 
@@ -75,7 +49,7 @@ class SextantcellRenderer( Renderer ):
         return int( (0.2126*r + 0.7152*g + 0.0722*b)*a/255 )
 
     def _render_sextantcell(self, *, x: int, y: int, get_pixel: GetPixel) -> Segment:
-        weight = 10
+        weight = 126
         style = Style.parse("white on black")
 
         #BLOCK SEXTANT-1 (+ 0 or 1)
@@ -93,21 +67,39 @@ class SextantcellRenderer( Renderer ):
         
         glyph_lut = " 🬀🬁🬂🬃🬄🬅🬆🬇🬈🬉🬊🬋🬌🬍🬎🬏🬐🬑🬒🬓▌🬔🬕🬖🬗🬘🬙🬚🬛🬜🬝🬞🬟🬠🬡🬢🬣🬤🬥🬦🬧▐🬨🬩🬪🬫🬬🬭🬮🬯🬰🬱🬲🬳🬴🬵🬶🬷🬸🬹🬺🬻█"
                                                                                      
-        #cons.print( glyph_lut[offset] + str(offset) )
         return Segment( glyph_lut[offset], style )
 
-#
+class StrToPixels( Pixels ):
+    """Extend Pixels to enable user specified font based string rendering with some PIL transforms"""
+
+    @staticmethod
+    def from_string(
+            phrase: str = "",
+            pic_renderer: Renderer = SextantcellRenderer(), 
+            pic_rotate: float = 0.0,
+            font_size: int = 11,
+            font_path: str = "./DepartureMono-Regular.woff"
+            ) -> Pixels:
+
+        font = ImageFont.truetype( font_path, size=font_size )
+        l,t,r,b = font.getbbox( phrase )
+        pane = Image.new( '1', (r,b) )
+        canvas = ImageDraw.Draw( pane )
+        mask = [x for x in font.getmask(phrase, mode='1')]
+        pane.putdata(mask)
+        if pic_rotate != 0:
+            pane = pane.rotate(pic_rotate, Image.NEAREST, expand = 1)
+            l,t,r,b = pane.getbbox()
+        segments = Pixels._segments_from_image(pane, (r,b), renderer=pic_renderer )
+
+        return Pixels.from_segments(segments)
+
+#Test Code Playground
 cons = Console()
-#pixels = StrToPixels.from_12string("A", 85)
-#cons.print( pixels )
-#cons.print( "\n" )
-#pixels = StrToPixels.from_string("A", 85)
-#cons.print( pixels )
-#cons.print( "\n" )
 
 for char in string.ascii_uppercase:
     pixels = StrToPixels.from_string(char)
     cons.print( pixels )
-    cons.print( "\n" )
+print( "(Normal terminal font for comparison :-)\n" )
 cons.print( StrToPixels.from_string( "Hello World" ) )
-print( "(Normal terminal font for comparison :-)" )
+cons.print( Pixels.from_image_path("./textual_logo_light.png", resize=(64,40), renderer=SextantcellRenderer()) )
