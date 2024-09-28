@@ -19,35 +19,18 @@ GetPixel = Callable[[Tuple[int, int]], RGBA]
 class StrToPixels( Pixels ):
 
     @staticmethod
-    def from_12string(
-            input: str = "A",
-            weight: int = 100,
-            ) -> Pixels:
-
-        image = PIL.Image.new(mode="RGB", size=(8,15) )
-        DM_font = PIL.ImageFont.truetype( './DepartureMono-Regular.otf', size=14 )
-        glyph = PIL.ImageDraw.Draw( image )
-        glyph.text( (0,0), input, font=DM_font, fill=(255,255,255), font_size=14 )
-        fn = lambda x : 255 if x > weight else 0
-        r_image = image.convert('L').point(fn, mode='1')
-        #r_image.show()
-        segments = Pixels._segments_from_image(r_image, (8,15), renderer=HalfcellRenderer() )
-
-        return Pixels.from_segments(segments)
-
-    @staticmethod
     def from_string(
-            input: str = "A",
-            weight: int = 100,
+            phrase: str = "A",
+            font_path: str = "./DepartureMono-Regular.woff"
             ) -> Pixels:
 
-        image = PIL.Image.new(mode="RGB", size=(8,12) )
-        glyph = PIL.ImageDraw.Draw( image )
-        glyph.font = PIL.ImageFont.truetype( './DepartureMono-Regular.woff', size=14 )
-        glyph.fontmode = "1"
-        glyph.text( (0,-2), input, fill=(255,255,255) )
-        #image.show()
-        segments = Pixels._segments_from_image(image, (8,12), renderer=SextantcellRenderer() )
+        font = PIL.ImageFont.truetype( font_path, size=11 )
+        l,t,r,b = font.getbbox( phrase )
+        pane = PIL.Image.new( '1', (r,b) )
+        canvas = PIL.ImageDraw.Draw( pane )
+        mask = [x for x in font.getmask(phrase, mode='1')]
+        pane.putdata(mask)
+        segments = Pixels._segments_from_image(pane, (r,b), renderer=SextantcellRenderer() )
 
         return Pixels.from_segments(segments)
 
@@ -92,7 +75,7 @@ class SextantcellRenderer( Renderer ):
         return int( (0.2126*r + 0.7152*g + 0.0722*b)*a/255 )
 
     def _render_sextantcell(self, *, x: int, y: int, get_pixel: GetPixel) -> Segment:
-        weight = 40
+        weight = 10
         style = Style.parse("white on black")
 
         #BLOCK SEXTANT-1 (+ 0 or 1)
@@ -123,6 +106,7 @@ cons = Console()
 #cons.print( "\n" )
 
 for char in string.ascii_uppercase:
-    pixels = StrToPixels.from_string(char, 85)
+    pixels = StrToPixels.from_string(char)
     cons.print( pixels )
     cons.print( "\n" )
+cons.print( StrToPixels.from_string( "Hello World" ) )
