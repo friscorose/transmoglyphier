@@ -110,3 +110,4 @@ for char in string.ascii_uppercase:
     cons.print( pixels )
     cons.print( "\n" )
 cons.print( StrToPixels.from_string( "Hello World" ) )
+print( "(Normal terminal font for comparison :-)" )
