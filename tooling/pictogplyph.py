@@ -9,6 +9,7 @@ from rich.style import Style
 import string
 import PIL.Image
 import PIL.ImageDraw
+import PIL.ImageFont
 
 from typing import Callable, Tuple
 
@@ -23,13 +24,14 @@ class StrToPixels( Pixels ):
             weight: int = 100,
             ) -> Pixels:
 
-        image = PIL.Image.new(mode="RGB", size=(16,24) )
+        image = PIL.Image.new(mode="RGB", size=(8,15) )
+        DM_font = PIL.ImageFont.truetype( './DepartureMono-Regular.otf', size=14 )
         glyph = PIL.ImageDraw.Draw( image )
-        glyph.text( (0,-2), input, fill=(255,255,255), font_size=18 )
+        glyph.text( (0,0), input, font=DM_font, fill=(255,255,255), font_size=14 )
         fn = lambda x : 255 if x > weight else 0
         r_image = image.convert('L').point(fn, mode='1')
-        
-        segments = Pixels._segments_from_image(r_image, (8,12), renderer=HalfcellRenderer() )
+        #r_image.show()
+        segments = Pixels._segments_from_image(r_image, (8,15), renderer=HalfcellRenderer() )
 
         return Pixels.from_segments(segments)
 
@@ -39,12 +41,12 @@ class StrToPixels( Pixels ):
             weight: int = 100,
             ) -> Pixels:
 
-        image = PIL.Image.new(mode="RGB", size=(16,24) )
+        image = PIL.Image.new(mode="RGB", size=(8,12) )
         glyph = PIL.ImageDraw.Draw( image )
-        glyph.text( (0,-2), input, fill=(255,255,255), font_size=18 )
-        fn = lambda x : 255 if x > weight else 0
-        r_image = image.convert('L').point(fn, mode='1')
-        
+        glyph.font = PIL.ImageFont.truetype( './DepartureMono-Regular.woff', size=14 )
+        glyph.fontmode = "1"
+        glyph.text( (0,-2), input, fill=(255,255,255) )
+        #image.show()
         segments = Pixels._segments_from_image(image, (8,12), renderer=SextantcellRenderer() )
 
         return Pixels.from_segments(segments)
@@ -84,53 +86,34 @@ class SextantcellRenderer( Renderer ):
         return line
 
     def _get_intensity( self, pixel: GetPixel ) -> int:
-        """calculate intensity approximation of an RGB PIL getpixel"""
+        """calculate intensity approximation of an RGB PIL getpixel.
+           https://en.wikipedia.org/wiki/Grayscale"""
         r,g,b,a = pixel
         return int( (0.2126*r + 0.7152*g + 0.0722*b)*a/255 )
 
     def _render_sextantcell(self, *, x: int, y: int, get_pixel: GetPixel) -> Segment:
-        weight = 50
+        weight = 40
         style = Style.parse("white on black")
-        block_sextant_base_UCP = 0x1FB00 - 0x1
-        glyph_offset = 0
-        #cons.print( get_pixel((x,y)) )
 
         #BLOCK SEXTANT-1 (+ 0 or 1)
-        glyph_offset += 2**0 if self._get_intensity( get_pixel((x  ,y  )) ) >  weight else 0
+        offset  = 2**0 if self._get_intensity( get_pixel((x  ,y  )) ) >  weight else 0
         #BLOCK SEXTANT-2 (+ 0 or 2)
-        glyph_offset += 2**1 if self._get_intensity( get_pixel((x+1,y  )) ) >  weight else 0
+        offset += 2**1 if self._get_intensity( get_pixel((x+1,y  )) ) >  weight else 0
         #BLOCK SEXTANT-3 (+ 0 or 4)
-        glyph_offset += 2**2 if self._get_intensity( get_pixel((x  ,y+1)) ) >  weight else 0
+        offset += 2**2 if self._get_intensity( get_pixel((x  ,y+1)) ) >  weight else 0
         #BLOCK SEXTANT-4 (+ 0 or 8)
-        glyph_offset += 2**3 if self._get_intensity( get_pixel((x+1,y+1)) ) >  weight else 0
+        offset += 2**3 if self._get_intensity( get_pixel((x+1,y+1)) ) >  weight else 0
         #BLOCK SEXTANT-5 (+ 0 or 16)
-        glyph_offset += 2**4 if self._get_intensity( get_pixel((x  ,y+2)) ) >  weight else 0
+        offset += 2**4 if self._get_intensity( get_pixel((x  ,y+2)) ) >  weight else 0
         #BLOCK SEXTANT-6 (+ 0 or 32)
-        glyph_offset += 2**5 if self._get_intensity( get_pixel((x+1,y+2)) ) >  weight else 0
+        offset += 2**5 if self._get_intensity( get_pixel((x+1,y+2)) ) >  weight else 0
         
-        if glyph_offset == 0:
-            #special case for no pixels active, glyph -> " " 0x20
-            glyph = chr( 0x20 )
-        elif glyph_offset == 21:
-            #special case for BLOCK SEXTANT-135, glyph -> "▌" 0x258C
-            glyph = chr( 0x258C )
-        elif glyph_offset == 42:
-            #special case for BLOCK SEXTANT-246, glyph -> "▐" 0x2590
-            glyph = chr( 0x2590 )
-        elif glyph_offset == 127:
-            #special case for BLOCK SEXTANT-123456, glyph -> "█" 0x2588
-            glyph = chr( 0x2588 )
-        else:
-            if glyph_offset >= 21:
-                glyph_offset -= 1
-            if glyph_offset >= 42:
-                glyph_offset -= 1
-            glyph = chr( block_sextant_base_UCP + glyph_offset )
-        
-        #cons.print( glyph + str(glyph_offset) )
-        return Segment( glyph, style )
+        glyph_lut = " 🬀🬁🬂🬃🬄🬅🬆🬇🬈🬉🬊🬋🬌🬍🬎🬏🬐🬑🬒🬓▌🬔🬕🬖🬗🬘🬙🬚🬛🬜🬝🬞🬟🬠🬡🬢🬣🬤🬥🬦🬧▐🬨🬩🬪🬫🬬🬭🬮🬯🬰🬱🬲🬳🬴🬵🬶🬷🬸🬹🬺🬻█"
+                                                                                     
+        #cons.print( glyph_lut[offset] + str(offset) )
+        return Segment( glyph_lut[offset], style )
 
-
+#
 cons = Console()
 #pixels = StrToPixels.from_12string("A", 85)
 #cons.print( pixels )
