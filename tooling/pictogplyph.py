@@ -12,6 +12,58 @@ import string
 RGBA = Tuple[int, int, int, int]
 GetPixel = Callable[[Tuple[int, int]], RGBA]
 
+class OctantcellRenderer( Renderer ):
+    """ Render to Block Octant in Unicode 16.0: Extend to braille glyphs? """
+
+    def render( self, image: Image, resize: tuple[int, int] | None) -> list[Segment]:
+        target_width = resize[0] if resize else image.size[0]
+        if target_width % 2 != 0:
+            target_width += 1
+
+        target_height = resize[1] if resize else image.size[1]
+        while target_height % 4 != 0:
+            target_height += 1
+
+        if image.size[0] != target_width or image.size[1] != target_height:
+            resize = (target_width, target_height)
+
+        return super().render(image, resize)
+
+    def _get_range(self, height: int) -> range:
+        return range(0, height, 4)
+
+    def _render_line(
+            self, *, line_index: int, width: int, get_pixel: GetPixel
+            ) -> list[Segment]:
+        line = []
+        for x in range(0, width, 2):
+            line.append(self._render_octantcell(x=x, y=line_index, get_pixel=get_pixel))
+        return line
+
+    def _get_intensity( self, pixel: GetPixel ) -> int:
+        """calculate intensity approximation of an RGB PIL getpixel.
+           https://en.wikipedia.org/wiki/Grayscale"""
+        r,g,b,a = pixel
+        return int( (0.2126*r + 0.7152*g + 0.0722*b)*a/255 )
+
+    def _render_octantcell(self, *, x: int, y: int, get_pixel: GetPixel) -> Segment:
+        weight = 126
+        style = Style.parse("white on black")
+
+        #Bit bang lookup table offset for BLOCK OCTANT-0 through BLOCK OCTANT-8 (equivalents)
+        offset  = 2**0 if self._get_intensity( get_pixel((x  ,y  )) ) >  weight else 0
+        offset += 2**1 if self._get_intensity( get_pixel((x+1,y  )) ) >  weight else 0
+        offset += 2**2 if self._get_intensity( get_pixel((x  ,y+1)) ) >  weight else 0
+        offset += 2**3 if self._get_intensity( get_pixel((x+1,y+1)) ) >  weight else 0
+        offset += 2**4 if self._get_intensity( get_pixel((x  ,y+2)) ) >  weight else 0
+        offset += 2**5 if self._get_intensity( get_pixel((x+1,y+2)) ) >  weight else 0
+        offset += 2**6 if self._get_intensity( get_pixel((x  ,y+3)) ) >  weight else 0
+        offset += 2**7 if self._get_intensity( get_pixel((x+1,y+3)) ) >  weight else 0
+        
+        glyph_lut=" 𜺨𜺫🮂𜴀▘𜴁𜴂𜴃𜴄▝𜴅𜴆𜴇𜴈▀𜴉𜴊𜴋𜴌🯦𜴍𜴎𜴏𜴐𜴑𜴒𜴓𜴔𜴕𜴖𜴗𜴘𜴙𜴚𜴛𜴜𜴝𜴞𜴟🯧𜴠𜴡𜴢𜴣𜴤𜴥𜴦𜴧𜴨𜴩𜴪𜴫𜴬𜴭𜴮𜴯𜴰𜴱𜴲𜴳𜴴𜴵🮅𜺣𜴶𜴷𜴸𜴹𜴺𜴻𜴼𜴽𜴾𜴿𜵀𜵁𜵂𜵃𜵄▖𜵅𜵆𜵇𜵈▌𜵉𜵊𜵋𜵌▞𜵍𜵎𜵏𜵐▛𜵑𜵒𜵓𜵔𜵕𜵖𜵗𜵘𜵙𜵚𜵛𜵜𜵝𜵞𜵟𜵠𜵡𜵢𜵣𜵤𜵥𜵦𜵧𜵨𜵩𜵪𜵫𜵬𜵭𜵮𜵯𜵰𜺠𜵱𜵲𜵳𜵴𜵵𜵶𜵷𜵸𜵹𜵺𜵻𜵼𜵽𜵾𜵿𜶀𜶁𜶂𜶃𜶄𜶅𜶆𜶇𜶈𜶉𜶊𜶋𜶌𜶍𜶎𜶏▗𜶐𜶑𜶒𜶓▚𜶔𜶕𜶖𜶗▐𜶘𜶙𜶚𜶛▜𜶜𜶝𜶞𜶟𜶠𜶡𜶢𜶣𜶤𜶥𜶦𜶧𜶨𜶩𜶪𜶫▂𜶬𜶭𜶮𜶯𜶰𜶱𜶲𜶳𜶴𜶵𜶶𜶷𜶸𜶹𜶺𜶻𜶼𜶽𜶾𜶿𜷀𜷁𜷂𜷃𜷄𜷅𜷆𜷇𜷈𜷉𜷊𜷋𜷌𜷍𜷎𜷏𜷐𜷑𜷒𜷓𜷔𜷕𜷖𜷗𜷘𜷙𜷚▄𜷛𜷜𜷝𜷞▙𜷟𜷠𜷡𜷢▟𜷣▆𜷤𜷥█"
+                                                                                     
+        return Segment( glyph_lut[offset], style )
+
 class SextantcellRenderer( Renderer ):
     """ Render to Block Sextant in Symbols for Legacy Computing Unicode block """
 
@@ -78,7 +130,7 @@ class StrToPixels( Pixels ):
             pic_renderer: Renderer = SextantcellRenderer(), 
             pic_rotate: float = 0.0,
             font_size: int = 11,
-            font_path: str = "./DepartureMono-Regular.woff"
+            font_path: str = "./DepartureMono-Regular.otf"
             ) -> Pixels:
 
         font = ImageFont.truetype( font_path, size=font_size )
@@ -95,11 +147,12 @@ class StrToPixels( Pixels ):
         return Pixels.from_segments(segments)
 
 #Test Code Playground
-cons = Console()
+if __name__ == "__main__":
+    cons = Console()
 
-for char in string.ascii_uppercase:
-    pixels = StrToPixels.from_string(char)
-    cons.print( pixels )
-print( "(Normal terminal font for comparison :-)\n" )
-cons.print( StrToPixels.from_string( "Hello World" ) )
-cons.print( Pixels.from_image_path("./textual_logo_light.png", resize=(64,40), renderer=SextantcellRenderer()) )
+    for char in string.ascii_uppercase:
+        pixels = StrToPixels.from_string(char, pic_renderer=OctantcellRenderer())
+        cons.print( pixels )
+    print( "(Normal terminal font for comparison :-)\n" )
+    cons.print( StrToPixels.from_string( "Hello World", pic_renderer=OctantcellRenderer() ) )
+    cons.print( Pixels.from_image_path("./textual_logo_light.png", resize=(64,40), renderer=OctantcellRenderer()) )
