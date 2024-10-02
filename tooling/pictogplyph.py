@@ -21,7 +21,7 @@ class CellRenderer( Renderer ):
 
     def render( self, image: Image, resize: tuple[int, int] | None) -> list[Segment]:
         target_width = resize[0] if resize else image.size[0]
-        if target_width % self.x_pixels != 0:
+        while target_width % self.x_pixels != 0:
             target_width += 1
 
         target_height = resize[1] if resize else image.size[1]
@@ -34,7 +34,7 @@ class CellRenderer( Renderer ):
         return super().render(image, resize)
 
     def _get_intensity( self, pixel: GetPixel ) -> int:
-        """calculate intensity approximation of an RGB PIL getpixel.
+        """calculate intensity approximation of an RGBA PIL getpixel.
            https://en.wikipedia.org/wiki/Grayscale"""
         r,g,b,a = pixel
         return int( (0.2126*r + 0.7152*g + 0.0722*b)*a/255 )
@@ -46,8 +46,8 @@ class CellRenderer( Renderer ):
         #pixlist index is the power of 2 for the pixel bit offset
         pixlist = []
         for y_idx in range( self.y_pixels ):
-            pixlist.append( get_pixel((x    , y + y_idx)) )
-            pixlist.append( get_pixel((x + 1, y + y_idx)) )
+            for x_idx in range( self.x_pixels ):
+                pixlist.append( get_pixel((x + x_idx, y + y_idx)) )
         return pixlist
 
     def _get_color(self, pixel: tuple ) -> str | None:
@@ -55,55 +55,6 @@ class CellRenderer( Renderer ):
         return f"rgb({r},{g},{b})" if a > 0 else None
 
     def _get_glyph_info( self, x: int, y: int, get_pixel: GetPixel ) -> list:
-        style = None
-        offset = 0
-        brightlist = []
-        darklist = []
-        colors = []
-        for exp, pixel in enumerate( self._get_cellpix(x, y, get_pixel) ):
-            if self._get_intensity( pixel ) > self.weight:
-                brightlist.append( pixel )
-                offset += 2**exp
-            else:
-                darklist.append( pixel )
-
-        if darklist:
-            bg_color = self._get_color( tuple( [int(sum(y) / len(y)) for y in zip(*darklist)] ) )
-        else:
-            bg_color = "default"
-        if brightlist:
-            fg_color = self._get_color( tuple( [int(sum(y) / len(y)) for y in zip(*brightlist)] ) )
-        else:
-            fg_color = "default"
-        colors.append( fg_color or "" )
-        colors.append( bg_color or "" )
-        style = Style.parse(" on ".join(colors)) 
-        return( offset, style )
-
-    def _get_glyph_info2( self, x: int, y: int, get_pixel: GetPixel ) -> list:
-        style = None
-        colors = []
-        offset = 0
-        celllist = self._get_cellpix(x,y,get_pixel)
-        cellimg = Image.new( 'RGBA', (self.x_pixels, self.y_pixels) )
-        cellimg.putdata( celllist )
-        cellbiimg = cellimg.convert( 'P', dither=None, colors=2 )
-        palette = cellbiimg.getpalette()
-        cellbilist = list( cellbiimg.getdata() )
-        #print( list(cellimg.getdata()) )
-        #print( cellbilist )
-        #print( list(palette) )
-        for exp, pixel in enumerate( cellbilist ):
-            if pixel:
-                offset += 2**exp
-        bg_color = self._get_color( (palette[0], palette[1], palette[2], 255) )
-        fg_color = self._get_color( (palette[3], palette[4], palette[5], 255) )
-        colors.append( fg_color or "" )
-        colors.append( bg_color or "" )
-        style = Style.parse(" on ".join(colors)) 
-        return( offset, style )
-
-    def _get_glyph_info3( self, x: int, y: int, get_pixel: GetPixel ) -> list:
         style = None
         offset = 0
         brightlist = []
@@ -159,7 +110,7 @@ class OctantcellRenderer( CellRenderer ):
         return line
 
     def _render_octantcell(self, *, x: int, y: int, get_pixel: GetPixel) -> Segment:
-        offset, style = self._get_glyph_info3(x, y, get_pixel) 
+        offset, style = self._get_glyph_info(x, y, get_pixel) 
 
         glyph_lut=" 𜺨𜺫🮂𜴀▘𜴁𜴂𜴃𜴄▝𜴅𜴆𜴇𜴈▀𜴉𜴊𜴋𜴌🯦𜴍𜴎𜴏𜴐𜴑𜴒𜴓𜴔𜴕𜴖𜴗𜴘𜴙𜴚𜴛𜴜𜴝𜴞𜴟🯧𜴠𜴡𜴢𜴣𜴤𜴥𜴦𜴧𜴨𜴩𜴪𜴫𜴬𜴭𜴮𜴯𜴰𜴱𜴲𜴳𜴴𜴵🮅𜺣𜴶𜴷𜴸𜴹𜴺𜴻𜴼𜴽𜴾𜴿𜵀𜵁𜵂𜵃𜵄▖𜵅𜵆𜵇𜵈▌𜵉𜵊𜵋𜵌▞𜵍𜵎𜵏𜵐▛𜵑𜵒𜵓𜵔𜵕𜵖𜵗𜵘𜵙𜵚𜵛𜵜𜵝𜵞𜵟𜵠𜵡𜵢𜵣𜵤𜵥𜵦𜵧𜵨𜵩𜵪𜵫𜵬𜵭𜵮𜵯𜵰𜺠𜵱𜵲𜵳𜵴𜵵𜵶𜵷𜵸𜵹𜵺𜵻𜵼𜵽𜵾𜵿𜶀𜶁𜶂𜶃𜶄𜶅𜶆𜶇𜶈𜶉𜶊𜶋𜶌𜶍𜶎𜶏▗𜶐𜶑𜶒𜶓▚𜶔𜶕𜶖𜶗▐𜶘𜶙𜶚𜶛▜𜶜𜶝𜶞𜶟𜶠𜶡𜶢𜶣𜶤𜶥𜶦𜶧𜶨𜶩𜶪𜶫▂𜶬𜶭𜶮𜶯𜶰𜶱𜶲𜶳𜶴𜶵𜶶𜶷𜶸𜶹𜶺𜶻𜶼𜶽𜶾𜶿𜷀𜷁𜷂𜷃𜷄𜷅𜷆𜷇𜷈𜷉𜷊𜷋𜷌𜷍𜷎𜷏𜷐𜷑𜷒𜷓𜷔𜷕𜷖𜷗𜷘𜷙𜷚▄𜷛𜷜𜷝𜷞▙𜷟𜷠𜷡𜷢▟𜷣▆𜷤𜷥█"
                                                                                      
@@ -193,8 +144,8 @@ class StrToPixels( Pixels ):
     @staticmethod
     def from_string(
             phrase: str = "",
-            style: str | Style | None = "white on black",
-            pic_renderer: Renderer = SextantcellRenderer(), 
+            style: str | Style | None = "default on default",
+            pic_renderer: Renderer = OctantcellRenderer(), 
             pic_rotate: float = 0.0,
             font_size: int = 11,
             font_path: str = "./DepartureMono-Regular.woff"
@@ -223,11 +174,11 @@ if __name__ == "__main__":
     cons = Console()
 
 #    for char in string.ascii_uppercase:
-#        pixels = StrToPixels.from_string(char, pic_renderer=OctantcellRenderer())
+#        pixels = StrToPixels.from_string(char, pic_renderer=SextantcellRenderer())
 #        cons.print( pixels )
+    cons.print( StrToPixels.from_string( "No Downunder", pic_rotate=180, pic_renderer=SextantcellRenderer() ) )
     print( "(Normal terminal font for comparison :-)\n" )
-    cons.print( StrToPixels.from_string( "Hello Arctic", style="green on blue", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf" , pic_renderer=OctantcellRenderer() ) )
-    cons.print( Pixels.from_image_path("./north-pole.png", resize=(64,56), renderer=OctantcellRenderer()) )
-    cons.print( StrToPixels.from_string( "Hello Grace", style="yellow on black", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf" , pic_renderer=OctantcellRenderer() ) )
-    cons.print( Pixels.from_image_path("./240px-Grace_M._Hopper.jpg", resize=(72,64), renderer=OctantcellRenderer()) )
-#    cons.print( StrToPixels.from_string( "No Downunder", style="yellow on blue", pic_rotate=180, pic_renderer=SextantcellRenderer() ) )
+    cons.print( StrToPixels.from_string( "Hello Arctic", style="green on blue", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf" ) )
+    cons.print( Pixels.from_image_path("./north-pole.png", resize=(64,64), renderer=OctantcellRenderer()) )
+    cons.print( StrToPixels.from_string( "Hello Grace", style="yellow on default" ) )
+    cons.print( Pixels.from_image_path("./240px-Grace_M._Hopper.jpg", resize=(80,80), renderer=OctantcellRenderer()) )
