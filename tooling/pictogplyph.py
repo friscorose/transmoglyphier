@@ -61,6 +61,7 @@ class CellRenderer( Renderer ):
         darklist = []
         colors = []
         
+        """ Process current cell pixels for brightness (intensity) bilevel 'coloring'. """
         celllist = self._get_cellpix(x,y,get_pixel)
         for exp, pixel in enumerate( celllist ):
             if self._get_intensity( pixel ) > self.weight:
@@ -70,13 +71,16 @@ class CellRenderer( Renderer ):
                 darklist.append( pixel )
 
         if darklist:
+            """ Simple RGB component averaging of background pixels, is this good?"""
             bg_color = self._get_color( tuple( [int(sum(y) / len(y)) for y in zip(*darklist)] ) )
             if brightlist:
                 fg_color = self._get_color( tuple( [int(sum(y) / len(y)) for y in zip(*brightlist)] ) )
             else:
                 fg_color = "default"
         else:
-            """All bright condition, reprocess cell for dominant 2 color pattern """
+            """ All bright condition, reprocess cell for dominant 2 color pattern.
+                A possibly better approach here would be use adjacent cells in a
+                Floyd-Steinberg esque 2-color dithering downsampling."""
             offset = 0
             cellimg = Image.new( 'RGBA', (self.x_pixels, self.y_pixels) )
             cellimg.putdata( celllist )
@@ -89,9 +93,8 @@ class CellRenderer( Renderer ):
             bg_color = self._get_color( (palette[0], palette[1], palette[2], 255) )
             fg_color = self._get_color( (palette[3], palette[4], palette[5], 255) )
 
-            
-        colors.append( fg_color or "" )
-        colors.append( bg_color or "" )
+        colors.append( fg_color )
+        colors.append( bg_color )
         style = Style.parse(" on ".join(colors)) 
         return( offset, style )
 
@@ -182,3 +185,5 @@ if __name__ == "__main__":
     cons.print( Pixels.from_image_path("./north-pole.png", resize=(64,64), renderer=OctantcellRenderer()) )
     cons.print( StrToPixels.from_string( "Hello Grace", style="yellow on default" ) )
     cons.print( Pixels.from_image_path("./240px-Grace_M._Hopper.jpg", resize=(80,80), renderer=OctantcellRenderer()) )
+    #cons.print( StrToPixels.from_string( "Transmoglyphier", style="red on yellow", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf"  ) )
+    #cons.print( Pixels.from_image_path("./Transmogrifier_zap.webp", resize=(90,90), renderer=OctantcellRenderer()) )
