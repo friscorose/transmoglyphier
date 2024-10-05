@@ -15,6 +15,7 @@ GetPixel = Callable[[Tuple[int, int]], RGBA]
 class CellRenderer( Renderer ):
     def __init__( self, *args, **kwargs ) -> None:
         self.weight = kwargs.pop('Weight', 96)
+        self.mono = kwargs.pop('mono', False)
         self.x_pixels = kwargs.pop( 'x_pixels', 2 )
         self.y_pixels = kwargs.pop( 'y_pixels', 4 )
         super().__init__( *args, **kwargs )
@@ -56,6 +57,8 @@ class CellRenderer( Renderer ):
 
     def _get_glyph_info( self, x: int, y: int, get_pixel: GetPixel ) -> list:
         style = None
+        fg_color = "default"
+        bg_color = "default"
         offset = 0
         brightlist = []
         darklist = []
@@ -75,9 +78,7 @@ class CellRenderer( Renderer ):
             bg_color = self._get_color( tuple( [int(sum(y) / len(y)) for y in zip(*darklist)] ) )
             if brightlist:
                 fg_color = self._get_color( tuple( [int(sum(y) / len(y)) for y in zip(*brightlist)] ) )
-            else:
-                fg_color = "default"
-        else:
+        elif not self.mono:
             """ All bright condition, reprocess cell for dominant 2 color pattern.
                 A possibly better approach here would be use adjacent cells in a
                 Floyd-Steinberg esque 2-color dithering downsampling."""
@@ -148,8 +149,8 @@ class StrToPixels( Pixels ):
     def from_string(
             phrase: str = "",
             style: str | Style | None = "default on default",
-            pic_renderer: Renderer = OctantcellRenderer(), 
-            pic_rotate: float = 0.0,
+            renderer: Renderer = OctantcellRenderer(), 
+            rotate: float = 0.0,
             font_size: int = 11,
             font_path: str = "./DepartureMono-Regular.woff"
             ) -> Pixels:
@@ -163,9 +164,10 @@ class StrToPixels( Pixels ):
         canvas = ImageDraw.Draw( pane )
         mask = [x for x in font.getmask(phrase, mode='1')]
         pane.putdata(mask)
-        if pic_rotate != 0:
-            pane = pane.rotate(pic_rotate, Image.NEAREST, expand = 1)
-        segments = Pixels._segments_from_image(pane, renderer=pic_renderer )
+        #pane.show()
+        if rotate != 0:
+            pane = pane.rotate(rotate, Image.NEAREST, expand = 1)
+        segments = Pixels._segments_from_image(pane, renderer=renderer )
         restyle_segments = []
         for segment in segments:
             restyle_segments.append( Segment(segment[0], style) )
@@ -177,13 +179,16 @@ if __name__ == "__main__":
     cons = Console()
 
 #    for char in string.ascii_uppercase:
-#        pixels = StrToPixels.from_string(char, pic_renderer=SextantcellRenderer())
+#        pixels = StrToPixels.from_string(char, renderer=SextantcellRenderer())
 #        cons.print( pixels )
-    cons.print( StrToPixels.from_string( "No Downunder", pic_rotate=180, pic_renderer=SextantcellRenderer() ) )
+    #cons.print( StrToPixels.from_string( "No Downunder", rotate=180, renderer=SextantcellRenderer() ) )
     print( "(Normal terminal font for comparison :-)\n" )
-    cons.print( StrToPixels.from_string( "Hello Arctic", style="green on blue", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf" ) )
-    cons.print( Pixels.from_image_path("./north-pole.png", resize=(64,64), renderer=OctantcellRenderer()) )
-    cons.print( StrToPixels.from_string( "Hello Grace", style="yellow on default" ) )
-    cons.print( Pixels.from_image_path("./240px-Grace_M._Hopper.jpg", resize=(80,80), renderer=OctantcellRenderer()) )
+    #cons.print( StrToPixels.from_string( "Hello Arctic", style="green on blue", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf" ) )
+    #cons.print( Pixels.from_image_path("./north-pole.png", resize=(64,64), renderer=OctantcellRenderer()) )
+    #cons.print( StrToPixels.from_string( "Hello Grace", style="yellow on default" ) )
+    #cons.print( Pixels.from_image_path("./240px-Grace_M._Hopper.jpg", resize=(80,80), renderer=OctantcellRenderer()) )
     #cons.print( StrToPixels.from_string( "Transmoglyphier", style="red on yellow", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf"  ) )
     #cons.print( Pixels.from_image_path("./Transmogrifier_zap.webp", resize=(90,90), renderer=OctantcellRenderer()) )
+    cons.print( StrToPixels.from_string( "♙♘♗♖♕♔ ", font_size=32, font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", renderer=OctantcellRenderer(mono=True) ) )
+    cons.print( StrToPixels.from_string( "♚♛♜♝♞♟ ", font_size=32, font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", renderer=OctantcellRenderer(mono=True) ) )
+
