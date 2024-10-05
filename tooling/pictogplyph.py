@@ -122,7 +122,7 @@ class BrailleCellRenderer( CellRenderer ):
         offset, style = self._get_glyph_info(x, y, get_pixel) 
 
        #glyph_lut=" 𜺨𜺫🮂𜴀▘𜴁𜴂𜴃𜴄▝𜴅𜴆𜴇𜴈▀𜴉𜴊𜴋𜴌🯦𜴍𜴎𜴏𜴐𜴑𜴒𜴓𜴔𜴕𜴖𜴗𜴘𜴙𜴚𜴛𜴜𜴝𜴞𜴟🯧𜴠𜴡𜴢𜴣𜴤𜴥𜴦𜴧𜴨𜴩𜴪𜴫𜴬𜴭𜴮𜴯𜴰𜴱𜴲𜴳𜴴𜴵🮅𜺣𜴶𜴷𜴸𜴹𜴺𜴻𜴼𜴽𜴾𜴿𜵀𜵁𜵂𜵃𜵄▖𜵅𜵆𜵇𜵈▌𜵉𜵊𜵋𜵌▞𜵍𜵎𜵏𜵐▛𜵑𜵒𜵓𜵔𜵕𜵖𜵗𜵘𜵙𜵚𜵛𜵜𜵝𜵞𜵟𜵠𜵡𜵢𜵣𜵤𜵥𜵦𜵧𜵨𜵩𜵪𜵫𜵬𜵭𜵮𜵯𜵰𜺠𜵱𜵲𜵳𜵴𜵵𜵶𜵷𜵸𜵹𜵺𜵻𜵼𜵽𜵾𜵿𜶀𜶁𜶂𜶃𜶄𜶅𜶆𜶇𜶈𜶉𜶊𜶋𜶌𜶍𜶎𜶏▗𜶐𜶑𜶒𜶓▚𜶔𜶕𜶖𜶗▐𜶘𜶙𜶚𜶛▜𜶜𜶝𜶞𜶟𜶠𜶡𜶢𜶣𜶤𜶥𜶦𜶧𜶨𜶩𜶪𜶫▂𜶬𜶭𜶮𜶯𜶰𜶱𜶲𜶳𜶴𜶵𜶶𜶷𜶸𜶹𜶺𜶻𜶼𜶽𜶾𜶿𜷀𜷁𜷂𜷃𜷄𜷅𜷆𜷇𜷈𜷉𜷊𜷋𜷌𜷍𜷎𜷏𜷐𜷑𜷒𜷓𜷔𜷕𜷖𜷗𜷘𜷙𜷚▄𜷛𜷜𜷝𜷞▙𜷟𜷠𜷡𜷢▟𜷣▆𜷤𜷥█"
-        glyph_lut="⠀⠁⠈⠉⠂⠃⠄⠅⠆⠇⠊⠋⠌⠍⠎⠏⠐⠑⠒⠓⠔⠕⠖⠗⠘⠙⠚⠛⠜⠝⠞⠟⠠⠡⠢⠣⠤⠥⠦⠧⠨⠩⠪⠫⠬⠭⠮⠯⠰⠱⠲⠳⠴⠵⠶⠷⠸⠹⠺⠻⠼⠽⠾⠿⡀⡁⡂⡃⡄⡅⡆⡇⡈⡉⡊⡋⡌⡍⡎⡏⡐⡑⡒⡓⡔⡕⡖⡗⡘⡙⡚⡛⡜⡝⡞⡟⡠⡡⡢⡣⡤⡥⡦⡧⡨⡩⡪⡫⡬⡭⡮⡯⡰⡱⡲⡳⡴⡵⡶⡷⡸⡹⡺⡻⡼⡽⡾⡿⢀⢁⢂⢃⢄⢅⢆⢇⢈⢉⢊⢋⢌⢍⢎⢏⢐⢑⢒⢓⢔⢕⢖⢗⢘⢙⢚⢛⢜⢝⢞⢟⢠⢡⢢⢣⢤⢥⢦⢧⢨⢩⢪⢫⢬⢭⢮⢯⢰⢱⢲⢳⢴⢵⢶⢷⢸⢹⢺⢻⢼⢽⢾⢿⣀⣁⣂⣃⣄⣅⣆⣇⣈⣉⣊⣋⣌⣍⣎⣏⣐⣑⣒⣓⣔⣕⣖⣗⣘⣙⣚⣛⣜⣝⣞⣟⣠⣡⣢⣣⣤⣥⣦⣧⣨⣩⣪⣫⣬⣭⣮⣯⣰⣱⣲⣳⣴⣵⣶⣷⣸⣹⣺⣻⣼⣽⣾⣿"
+        glyph_lut="⠀⠁⠈⠉⠂⠃⠊⠋⠐⠑⠘⠙⠒⠓⠚⠛⠄⠅⠌⠍⠆⠇⠎⠏⠔⠕⠜⠝⠖⠗⠞⠟⠠⠡⠨⠩⠢⠣⠪⠫⠰⠱⠸⠹⠲⠳⠺⠻⠤⠥⠬⠭⠦⠧⠮⠯⠴⠵⠼⠽⠶⠷⠾⠿⡀⡁⡈⡉⡂⡃⡊⡋⡐⡑⡘⡙⡒⡓⡚⡛⡄⡅⡌⡍⡆⡇⡎⡏⡔⡕⡜⡝⡖⡗⡞⡟⡠⡡⡨⡩⡢⡣⡪⡫⡰⡱⡸⡹⡲⡳⡺⡻⡤⡥⡬⡭⡦⡧⡮⡯⡴⡵⡼⡽⡶⡷⡾⡿⢀⢁⢈⢉⢂⢃⢊⢋⢐⢑⢘⢙⢒⢓⢚⢛⢄⢅⢌⢍⢆⢇⢎⢏⢔⢕⢜⢝⢖⢗⢞⢟⢠⢡⢨⢩⢢⢣⢪⢫⢰⢱⢸⢹⢲⢳⢺⢻⢤⢥⢬⢭⢦⢧⢮⢯⢴⢵⢼⢽⢶⢷⢾⢿⣀⣁⣈⣉⣂⣃⣊⣋⣐⣑⣘⣙⣒⣓⣚⣛⣄⣅⣌⣍⣆⣇⣎⣏⣔⣕⣜⣝⣖⣗⣞⣟⣠⣡⣨⣩⣢⣣⣪⣫⣰⣱⣸⣹⣲⣳⣺⣻⣤⣥⣬⣭⣦⣧⣮⣯⣴⣵⣼⣽⣶⣷⣾⣿"
                                                                                      
         return Segment( glyph_lut[offset], style )
 
@@ -169,7 +169,7 @@ class SextantCellRenderer( CellRenderer ):
                                                                                      
         return Segment( glyph_lut[offset], style )
 
-class StrToPixels( Pixels ):
+class ToPixels( Pixels ):
     """Extend Pixels to enable user specified font based string rendering with some PIL transforms"""
 
     @staticmethod
@@ -205,26 +205,28 @@ class StrToPixels( Pixels ):
 if __name__ == "__main__":
     cons = Console()
 
-    brailles = ""
-    for char in range( 0x2800, 0x2900 ):
-        brailles += chr( char )
-    print( brailles )
-#    for char in string.ascii_uppercase:
-#        pixels = StrToPixels.from_string(char, renderer=SextantCellRenderer())
-#        cons.print( pixels )
-    #cons.print( StrToPixels.from_string( "No Downunder", rotate=180, renderer=SextantCellRenderer() ) )
+    #brailles = ""
+    #for char in range( 0x2800, 0x2900 ):
+    #    brailles += chr( char )
+    #print( brailles )
+    #for char in string.ascii_uppercase:
+    #    pixels = ToPixels.from_string(char, renderer=SextantCellRenderer())
+    #    cons.print( pixels )
+    #cons.print( ToPixels.from_string( "No Downunder", rotate=180, renderer=SextantCellRenderer() ) )
     print( "(Normal terminal font for comparison :-)\n" )
-    print( "Digits in DepartureMono  WOFF\n" )
-    cons.print( StrToPixels.from_string( string.digits, style="yellow on default" ) )
-    print( "Digits in Terminus TTF\n" )
-    cons.print( StrToPixels.from_string( string.digits, style="green on blue", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf" ) )
+    #print( "Blue digits in DepartureMono  WOFF\n" )
+    #cons.print( ToPixels.from_string( string.digits, style="blue on default" ) )
+    print( "Green digits in Terminus TTF\n" )
+    cons.print( ToPixels.from_string( string.digits, style="green on default", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=BrailleCellRenderer(mono=True) ) )
+    print( "Braille punchtape digits in Terminus TTF\n" )
+    cons.print( ToPixels.from_string( string.digits, style="black on white", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=BrailleCellRenderer(mono=True) ) )
     cons.print( Pixels.from_image_path("./textual_logo_light.png", resize=(42,42), renderer=BrailleCellRenderer(mono=True)) )
-    #cons.print( StrToPixels.from_string( "Hello Arctic", style="green on blue", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf" ) )
+    #cons.print( ToPixels.from_string( "Hello Arctic", style="green on blue", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf" ) )
     #cons.print( Pixels.from_image_path("./north-pole.png", resize=(64,64), renderer=OctantCellRenderer()) )
-    #cons.print( StrToPixels.from_string( "Hello Grace", style="yellow on default" ) )
+    #cons.print( ToPixels.from_string( "Hello Grace", style="yellow on default" ) )
     #cons.print( Pixels.from_image_path("./240px-Grace_M._Hopper.jpg", resize=(80,80), renderer=OctantCellRenderer()) )
-    #cons.print( StrToPixels.from_string( "Transmoglyphier", style="red on yellow", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf"  ) )
+    #cons.print( ToPixels.from_string( "Transmoglyphier", style="red on yellow", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf"  ) )
     #cons.print( Pixels.from_image_path("./Transmogrifier_zap.webp", resize=(90,90), renderer=OctantCellRenderer()) )
-    cons.print( StrToPixels.from_string( "♙♘♗♖♕♔ ", font_size=32, font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", renderer=OctantCellRenderer(mono=True) ) )
-    cons.print( StrToPixels.from_string( "♚♛♜♝♞♟ ", font_size=32, font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", renderer=OctantCellRenderer(mono=True) ) )
+    #cons.print( ToPixels.from_string( "♙♘♗♖♕♔ ", font_size=32, font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", renderer=OctantCellRenderer(mono=True) ) )
+    #cons.print( ToPixels.from_string( "♚♛♜♝♞♟ ", font_size=32, font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", renderer=OctantCellRenderer(mono=True) ) )
 
