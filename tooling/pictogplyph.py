@@ -56,10 +56,9 @@ class CellRenderer( Renderer ):
         return f"rgb({r},{g},{b})" if a > 0 else None
 
     def _get_glyph_info( self, x: int, y: int, get_pixel: GetPixel ) -> list:
-        style = None
+        offset = 0
         fg_color = "default"
         bg_color = "default"
-        offset = 0
         brightlist = []
         darklist = []
         colors = []
@@ -94,8 +93,14 @@ class CellRenderer( Renderer ):
             bg_color = self._get_color( (palette[0], palette[1], palette[2], 255) )
             fg_color = self._get_color( (palette[3], palette[4], palette[5], 255) )
 
-        colors.append( fg_color )
-        colors.append( bg_color )
+        if fg_color is not None:
+            colors.append( fg_color )
+        else:
+            colors.append( "default" )
+        if bg_color is not None:
+            colors.append( bg_color )
+        else:
+            colors.append( "default" )
         style = Style.parse(" on ".join(colors)) 
         return( offset, style )
 
@@ -183,6 +188,11 @@ if __name__ == "__main__":
 #        cons.print( pixels )
     #cons.print( StrToPixels.from_string( "No Downunder", rotate=180, renderer=SextantcellRenderer() ) )
     print( "(Normal terminal font for comparison :-)\n" )
+    print( "Digits in DepartureMono  WOFF\n" )
+    cons.print( StrToPixels.from_string( string.digits, style="yellow on default" ) )
+    print( "Digits in Terminus TTF\n" )
+    cons.print( StrToPixels.from_string( string.digits, style="green on blue", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf" ) )
+    cons.print( Pixels.from_image_path("./textual_logo_light.png", resize=(42,42), renderer=OctantcellRenderer()) )
     #cons.print( StrToPixels.from_string( "Hello Arctic", style="green on blue", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf" ) )
     #cons.print( Pixels.from_image_path("./north-pole.png", resize=(64,64), renderer=OctantcellRenderer()) )
     #cons.print( StrToPixels.from_string( "Hello Grace", style="yellow on default" ) )
