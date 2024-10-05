@@ -104,7 +104,29 @@ class CellRenderer( Renderer ):
         style = Style.parse(" on ".join(colors)) 
         return( offset, style )
 
-class OctantcellRenderer( CellRenderer ):
+class BrailleCellRenderer( CellRenderer ):
+    """ Render to Block Octant in Unicode 16.0: Extend to braille glyphs? """
+    def __init__( self, *args, **kwargs ) -> None:
+        super().__init__( *args, **kwargs )
+        self.y_pixels = kwargs.pop( 'y_pixels', 4 )
+
+    def _render_line(
+            self, *, line_index: int, width: int, get_pixel: GetPixel
+            ) -> list[Segment]:
+        line = []
+        for x in range(0, width, self.x_pixels):
+            line.append(self._render_octantcell(x=x, y=line_index, get_pixel=get_pixel))
+        return line
+
+    def _render_octantcell(self, *, x: int, y: int, get_pixel: GetPixel) -> Segment:
+        offset, style = self._get_glyph_info(x, y, get_pixel) 
+
+       #glyph_lut=" 𜺨𜺫🮂𜴀▘𜴁𜴂𜴃𜴄▝𜴅𜴆𜴇𜴈▀𜴉𜴊𜴋𜴌🯦𜴍𜴎𜴏𜴐𜴑𜴒𜴓𜴔𜴕𜴖𜴗𜴘𜴙𜴚𜴛𜴜𜴝𜴞𜴟🯧𜴠𜴡𜴢𜴣𜴤𜴥𜴦𜴧𜴨𜴩𜴪𜴫𜴬𜴭𜴮𜴯𜴰𜴱𜴲𜴳𜴴𜴵🮅𜺣𜴶𜴷𜴸𜴹𜴺𜴻𜴼𜴽𜴾𜴿𜵀𜵁𜵂𜵃𜵄▖𜵅𜵆𜵇𜵈▌𜵉𜵊𜵋𜵌▞𜵍𜵎𜵏𜵐▛𜵑𜵒𜵓𜵔𜵕𜵖𜵗𜵘𜵙𜵚𜵛𜵜𜵝𜵞𜵟𜵠𜵡𜵢𜵣𜵤𜵥𜵦𜵧𜵨𜵩𜵪𜵫𜵬𜵭𜵮𜵯𜵰𜺠𜵱𜵲𜵳𜵴𜵵𜵶𜵷𜵸𜵹𜵺𜵻𜵼𜵽𜵾𜵿𜶀𜶁𜶂𜶃𜶄𜶅𜶆𜶇𜶈𜶉𜶊𜶋𜶌𜶍𜶎𜶏▗𜶐𜶑𜶒𜶓▚𜶔𜶕𜶖𜶗▐𜶘𜶙𜶚𜶛▜𜶜𜶝𜶞𜶟𜶠𜶡𜶢𜶣𜶤𜶥𜶦𜶧𜶨𜶩𜶪𜶫▂𜶬𜶭𜶮𜶯𜶰𜶱𜶲𜶳𜶴𜶵𜶶𜶷𜶸𜶹𜶺𜶻𜶼𜶽𜶾𜶿𜷀𜷁𜷂𜷃𜷄𜷅𜷆𜷇𜷈𜷉𜷊𜷋𜷌𜷍𜷎𜷏𜷐𜷑𜷒𜷓𜷔𜷕𜷖𜷗𜷘𜷙𜷚▄𜷛𜷜𜷝𜷞▙𜷟𜷠𜷡𜷢▟𜷣▆𜷤𜷥█"
+        glyph_lut="⠀⠁⠈⠉⠂⠃⠄⠅⠆⠇⠊⠋⠌⠍⠎⠏⠐⠑⠒⠓⠔⠕⠖⠗⠘⠙⠚⠛⠜⠝⠞⠟⠠⠡⠢⠣⠤⠥⠦⠧⠨⠩⠪⠫⠬⠭⠮⠯⠰⠱⠲⠳⠴⠵⠶⠷⠸⠹⠺⠻⠼⠽⠾⠿⡀⡁⡂⡃⡄⡅⡆⡇⡈⡉⡊⡋⡌⡍⡎⡏⡐⡑⡒⡓⡔⡕⡖⡗⡘⡙⡚⡛⡜⡝⡞⡟⡠⡡⡢⡣⡤⡥⡦⡧⡨⡩⡪⡫⡬⡭⡮⡯⡰⡱⡲⡳⡴⡵⡶⡷⡸⡹⡺⡻⡼⡽⡾⡿⢀⢁⢂⢃⢄⢅⢆⢇⢈⢉⢊⢋⢌⢍⢎⢏⢐⢑⢒⢓⢔⢕⢖⢗⢘⢙⢚⢛⢜⢝⢞⢟⢠⢡⢢⢣⢤⢥⢦⢧⢨⢩⢪⢫⢬⢭⢮⢯⢰⢱⢲⢳⢴⢵⢶⢷⢸⢹⢺⢻⢼⢽⢾⢿⣀⣁⣂⣃⣄⣅⣆⣇⣈⣉⣊⣋⣌⣍⣎⣏⣐⣑⣒⣓⣔⣕⣖⣗⣘⣙⣚⣛⣜⣝⣞⣟⣠⣡⣢⣣⣤⣥⣦⣧⣨⣩⣪⣫⣬⣭⣮⣯⣰⣱⣲⣳⣴⣵⣶⣷⣸⣹⣺⣻⣼⣽⣾⣿"
+                                                                                     
+        return Segment( glyph_lut[offset], style )
+
+class OctantCellRenderer( CellRenderer ):
     """ Render to Block Octant in Unicode 16.0: Extend to braille glyphs? """
     def __init__( self, *args, **kwargs ) -> None:
         super().__init__( *args, **kwargs )
@@ -125,7 +147,7 @@ class OctantcellRenderer( CellRenderer ):
                                                                                      
         return Segment( glyph_lut[offset], style )
 
-class SextantcellRenderer( CellRenderer ):
+class SextantCellRenderer( CellRenderer ):
     """ Render to Block Sextant in Symbols for Legacy Computing Unicode block """
 
     def __init__( self, *args, **kwargs ) -> None:
@@ -154,7 +176,7 @@ class StrToPixels( Pixels ):
     def from_string(
             phrase: str = "",
             style: str | Style | None = "default on default",
-            renderer: Renderer = OctantcellRenderer(), 
+            renderer: Renderer = OctantCellRenderer(), 
             rotate: float = 0.0,
             font_size: int = 11,
             font_path: str = "./DepartureMono-Regular.woff"
@@ -183,22 +205,26 @@ class StrToPixels( Pixels ):
 if __name__ == "__main__":
     cons = Console()
 
+    brailles = ""
+    for char in range( 0x2800, 0x2900 ):
+        brailles += chr( char )
+    print( brailles )
 #    for char in string.ascii_uppercase:
-#        pixels = StrToPixels.from_string(char, renderer=SextantcellRenderer())
+#        pixels = StrToPixels.from_string(char, renderer=SextantCellRenderer())
 #        cons.print( pixels )
-    #cons.print( StrToPixels.from_string( "No Downunder", rotate=180, renderer=SextantcellRenderer() ) )
+    #cons.print( StrToPixels.from_string( "No Downunder", rotate=180, renderer=SextantCellRenderer() ) )
     print( "(Normal terminal font for comparison :-)\n" )
     print( "Digits in DepartureMono  WOFF\n" )
     cons.print( StrToPixels.from_string( string.digits, style="yellow on default" ) )
     print( "Digits in Terminus TTF\n" )
     cons.print( StrToPixels.from_string( string.digits, style="green on blue", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf" ) )
-    cons.print( Pixels.from_image_path("./textual_logo_light.png", resize=(42,42), renderer=OctantcellRenderer()) )
+    cons.print( Pixels.from_image_path("./textual_logo_light.png", resize=(42,42), renderer=BrailleCellRenderer(mono=True)) )
     #cons.print( StrToPixels.from_string( "Hello Arctic", style="green on blue", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf" ) )
-    #cons.print( Pixels.from_image_path("./north-pole.png", resize=(64,64), renderer=OctantcellRenderer()) )
+    #cons.print( Pixels.from_image_path("./north-pole.png", resize=(64,64), renderer=OctantCellRenderer()) )
     #cons.print( StrToPixels.from_string( "Hello Grace", style="yellow on default" ) )
-    #cons.print( Pixels.from_image_path("./240px-Grace_M._Hopper.jpg", resize=(80,80), renderer=OctantcellRenderer()) )
+    #cons.print( Pixels.from_image_path("./240px-Grace_M._Hopper.jpg", resize=(80,80), renderer=OctantCellRenderer()) )
     #cons.print( StrToPixels.from_string( "Transmoglyphier", style="red on yellow", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf"  ) )
-    #cons.print( Pixels.from_image_path("./Transmogrifier_zap.webp", resize=(90,90), renderer=OctantcellRenderer()) )
-    cons.print( StrToPixels.from_string( "♙♘♗♖♕♔ ", font_size=32, font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", renderer=OctantcellRenderer(mono=True) ) )
-    cons.print( StrToPixels.from_string( "♚♛♜♝♞♟ ", font_size=32, font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", renderer=OctantcellRenderer(mono=True) ) )
+    #cons.print( Pixels.from_image_path("./Transmogrifier_zap.webp", resize=(90,90), renderer=OctantCellRenderer()) )
+    cons.print( StrToPixels.from_string( "♙♘♗♖♕♔ ", font_size=32, font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", renderer=OctantCellRenderer(mono=True) ) )
+    cons.print( StrToPixels.from_string( "♚♛♜♝♞♟ ", font_size=32, font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", renderer=OctantCellRenderer(mono=True) ) )
 
