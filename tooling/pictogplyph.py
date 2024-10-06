@@ -18,6 +18,7 @@ class CellRenderer( Renderer ):
         self.mono = kwargs.pop('mono', False)
         self.x_pixels = kwargs.pop( 'x_pixels', 2 )
         self.y_pixels = kwargs.pop( 'y_pixels', 4 )
+        self.pips = kwargs.pop( 'pips', False )
         super().__init__( *args, **kwargs )
 
     def render( self, image: Image, resize: tuple[int, int] | None) -> list[Segment]:
@@ -104,28 +105,6 @@ class CellRenderer( Renderer ):
         style = Style.parse(" on ".join(colors)) 
         return( offset, style )
 
-class BrailleCellRenderer( CellRenderer ):
-    """ Render to Block Octant in Unicode 16.0: Extend to braille glyphs? """
-    def __init__( self, *args, **kwargs ) -> None:
-        super().__init__( *args, **kwargs )
-        self.y_pixels = kwargs.pop( 'y_pixels', 4 )
-
-    def _render_line(
-            self, *, line_index: int, width: int, get_pixel: GetPixel
-            ) -> list[Segment]:
-        line = []
-        for x in range(0, width, self.x_pixels):
-            line.append(self._render_octantcell(x=x, y=line_index, get_pixel=get_pixel))
-        return line
-
-    def _render_octantcell(self, *, x: int, y: int, get_pixel: GetPixel) -> Segment:
-        offset, style = self._get_glyph_info(x, y, get_pixel) 
-
-       #glyph_lut=" 𜺨𜺫🮂𜴀▘𜴁𜴂𜴃𜴄▝𜴅𜴆𜴇𜴈▀𜴉𜴊𜴋𜴌🯦𜴍𜴎𜴏𜴐𜴑𜴒𜴓𜴔𜴕𜴖𜴗𜴘𜴙𜴚𜴛𜴜𜴝𜴞𜴟🯧𜴠𜴡𜴢𜴣𜴤𜴥𜴦𜴧𜴨𜴩𜴪𜴫𜴬𜴭𜴮𜴯𜴰𜴱𜴲𜴳𜴴𜴵🮅𜺣𜴶𜴷𜴸𜴹𜴺𜴻𜴼𜴽𜴾𜴿𜵀𜵁𜵂𜵃𜵄▖𜵅𜵆𜵇𜵈▌𜵉𜵊𜵋𜵌▞𜵍𜵎𜵏𜵐▛𜵑𜵒𜵓𜵔𜵕𜵖𜵗𜵘𜵙𜵚𜵛𜵜𜵝𜵞𜵟𜵠𜵡𜵢𜵣𜵤𜵥𜵦𜵧𜵨𜵩𜵪𜵫𜵬𜵭𜵮𜵯𜵰𜺠𜵱𜵲𜵳𜵴𜵵𜵶𜵷𜵸𜵹𜵺𜵻𜵼𜵽𜵾𜵿𜶀𜶁𜶂𜶃𜶄𜶅𜶆𜶇𜶈𜶉𜶊𜶋𜶌𜶍𜶎𜶏▗𜶐𜶑𜶒𜶓▚𜶔𜶕𜶖𜶗▐𜶘𜶙𜶚𜶛▜𜶜𜶝𜶞𜶟𜶠𜶡𜶢𜶣𜶤𜶥𜶦𜶧𜶨𜶩𜶪𜶫▂𜶬𜶭𜶮𜶯𜶰𜶱𜶲𜶳𜶴𜶵𜶶𜶷𜶸𜶹𜶺𜶻𜶼𜶽𜶾𜶿𜷀𜷁𜷂𜷃𜷄𜷅𜷆𜷇𜷈𜷉𜷊𜷋𜷌𜷍𜷎𜷏𜷐𜷑𜷒𜷓𜷔𜷕𜷖𜷗𜷘𜷙𜷚▄𜷛𜷜𜷝𜷞▙𜷟𜷠𜷡𜷢▟𜷣▆𜷤𜷥█"
-        glyph_lut="⠀⠁⠈⠉⠂⠃⠊⠋⠐⠑⠘⠙⠒⠓⠚⠛⠄⠅⠌⠍⠆⠇⠎⠏⠔⠕⠜⠝⠖⠗⠞⠟⠠⠡⠨⠩⠢⠣⠪⠫⠰⠱⠸⠹⠲⠳⠺⠻⠤⠥⠬⠭⠦⠧⠮⠯⠴⠵⠼⠽⠶⠷⠾⠿⡀⡁⡈⡉⡂⡃⡊⡋⡐⡑⡘⡙⡒⡓⡚⡛⡄⡅⡌⡍⡆⡇⡎⡏⡔⡕⡜⡝⡖⡗⡞⡟⡠⡡⡨⡩⡢⡣⡪⡫⡰⡱⡸⡹⡲⡳⡺⡻⡤⡥⡬⡭⡦⡧⡮⡯⡴⡵⡼⡽⡶⡷⡾⡿⢀⢁⢈⢉⢂⢃⢊⢋⢐⢑⢘⢙⢒⢓⢚⢛⢄⢅⢌⢍⢆⢇⢎⢏⢔⢕⢜⢝⢖⢗⢞⢟⢠⢡⢨⢩⢢⢣⢪⢫⢰⢱⢸⢹⢲⢳⢺⢻⢤⢥⢬⢭⢦⢧⢮⢯⢴⢵⢼⢽⢶⢷⢾⢿⣀⣁⣈⣉⣂⣃⣊⣋⣐⣑⣘⣙⣒⣓⣚⣛⣄⣅⣌⣍⣆⣇⣎⣏⣔⣕⣜⣝⣖⣗⣞⣟⣠⣡⣨⣩⣢⣣⣪⣫⣰⣱⣸⣹⣲⣳⣺⣻⣤⣥⣬⣭⣦⣧⣮⣯⣴⣵⣼⣽⣶⣷⣾⣿"
-                                                                                     
-        return Segment( glyph_lut[offset], style )
-
 class OctantCellRenderer( CellRenderer ):
     """ Render to Block Octant in Unicode 16.0: Extend to braille glyphs? """
     def __init__( self, *args, **kwargs ) -> None:
@@ -143,7 +122,10 @@ class OctantCellRenderer( CellRenderer ):
     def _render_octantcell(self, *, x: int, y: int, get_pixel: GetPixel) -> Segment:
         offset, style = self._get_glyph_info(x, y, get_pixel) 
 
-        glyph_lut=" 𜺨𜺫🮂𜴀▘𜴁𜴂𜴃𜴄▝𜴅𜴆𜴇𜴈▀𜴉𜴊𜴋𜴌🯦𜴍𜴎𜴏𜴐𜴑𜴒𜴓𜴔𜴕𜴖𜴗𜴘𜴙𜴚𜴛𜴜𜴝𜴞𜴟🯧𜴠𜴡𜴢𜴣𜴤𜴥𜴦𜴧𜴨𜴩𜴪𜴫𜴬𜴭𜴮𜴯𜴰𜴱𜴲𜴳𜴴𜴵🮅𜺣𜴶𜴷𜴸𜴹𜴺𜴻𜴼𜴽𜴾𜴿𜵀𜵁𜵂𜵃𜵄▖𜵅𜵆𜵇𜵈▌𜵉𜵊𜵋𜵌▞𜵍𜵎𜵏𜵐▛𜵑𜵒𜵓𜵔𜵕𜵖𜵗𜵘𜵙𜵚𜵛𜵜𜵝𜵞𜵟𜵠𜵡𜵢𜵣𜵤𜵥𜵦𜵧𜵨𜵩𜵪𜵫𜵬𜵭𜵮𜵯𜵰𜺠𜵱𜵲𜵳𜵴𜵵𜵶𜵷𜵸𜵹𜵺𜵻𜵼𜵽𜵾𜵿𜶀𜶁𜶂𜶃𜶄𜶅𜶆𜶇𜶈𜶉𜶊𜶋𜶌𜶍𜶎𜶏▗𜶐𜶑𜶒𜶓▚𜶔𜶕𜶖𜶗▐𜶘𜶙𜶚𜶛▜𜶜𜶝𜶞𜶟𜶠𜶡𜶢𜶣𜶤𜶥𜶦𜶧𜶨𜶩𜶪𜶫▂𜶬𜶭𜶮𜶯𜶰𜶱𜶲𜶳𜶴𜶵𜶶𜶷𜶸𜶹𜶺𜶻𜶼𜶽𜶾𜶿𜷀𜷁𜷂𜷃𜷄𜷅𜷆𜷇𜷈𜷉𜷊𜷋𜷌𜷍𜷎𜷏𜷐𜷑𜷒𜷓𜷔𜷕𜷖𜷗𜷘𜷙𜷚▄𜷛𜷜𜷝𜷞▙𜷟𜷠𜷡𜷢▟𜷣▆𜷤𜷥█"
+        if self.pips:
+            glyph_lut="⠀⠁⠈⠉⠂⠃⠊⠋⠐⠑⠘⠙⠒⠓⠚⠛⠄⠅⠌⠍⠆⠇⠎⠏⠔⠕⠜⠝⠖⠗⠞⠟⠠⠡⠨⠩⠢⠣⠪⠫⠰⠱⠸⠹⠲⠳⠺⠻⠤⠥⠬⠭⠦⠧⠮⠯⠴⠵⠼⠽⠶⠷⠾⠿⡀⡁⡈⡉⡂⡃⡊⡋⡐⡑⡘⡙⡒⡓⡚⡛⡄⡅⡌⡍⡆⡇⡎⡏⡔⡕⡜⡝⡖⡗⡞⡟⡠⡡⡨⡩⡢⡣⡪⡫⡰⡱⡸⡹⡲⡳⡺⡻⡤⡥⡬⡭⡦⡧⡮⡯⡴⡵⡼⡽⡶⡷⡾⡿⢀⢁⢈⢉⢂⢃⢊⢋⢐⢑⢘⢙⢒⢓⢚⢛⢄⢅⢌⢍⢆⢇⢎⢏⢔⢕⢜⢝⢖⢗⢞⢟⢠⢡⢨⢩⢢⢣⢪⢫⢰⢱⢸⢹⢲⢳⢺⢻⢤⢥⢬⢭⢦⢧⢮⢯⢴⢵⢼⢽⢶⢷⢾⢿⣀⣁⣈⣉⣂⣃⣊⣋⣐⣑⣘⣙⣒⣓⣚⣛⣄⣅⣌⣍⣆⣇⣎⣏⣔⣕⣜⣝⣖⣗⣞⣟⣠⣡⣨⣩⣢⣣⣪⣫⣰⣱⣸⣹⣲⣳⣺⣻⣤⣥⣬⣭⣦⣧⣮⣯⣴⣵⣼⣽⣶⣷⣾⣿"
+        else:
+            glyph_lut=" 𜺨𜺫🮂𜴀▘𜴁𜴂𜴃𜴄▝𜴅𜴆𜴇𜴈▀𜴉𜴊𜴋𜴌🯦𜴍𜴎𜴏𜴐𜴑𜴒𜴓𜴔𜴕𜴖𜴗𜴘𜴙𜴚𜴛𜴜𜴝𜴞𜴟🯧𜴠𜴡𜴢𜴣𜴤𜴥𜴦𜴧𜴨𜴩𜴪𜴫𜴬𜴭𜴮𜴯𜴰𜴱𜴲𜴳𜴴𜴵🮅𜺣𜴶𜴷𜴸𜴹𜴺𜴻𜴼𜴽𜴾𜴿𜵀𜵁𜵂𜵃𜵄▖𜵅𜵆𜵇𜵈▌𜵉𜵊𜵋𜵌▞𜵍𜵎𜵏𜵐▛𜵑𜵒𜵓𜵔𜵕𜵖𜵗𜵘𜵙𜵚𜵛𜵜𜵝𜵞𜵟𜵠𜵡𜵢𜵣𜵤𜵥𜵦𜵧𜵨𜵩𜵪𜵫𜵬𜵭𜵮𜵯𜵰𜺠𜵱𜵲𜵳𜵴𜵵𜵶𜵷𜵸𜵹𜵺𜵻𜵼𜵽𜵾𜵿𜶀𜶁𜶂𜶃𜶄𜶅𜶆𜶇𜶈𜶉𜶊𜶋𜶌𜶍𜶎𜶏▗𜶐𜶑𜶒𜶓▚𜶔𜶕𜶖𜶗▐𜶘𜶙𜶚𜶛▜𜶜𜶝𜶞𜶟𜶠𜶡𜶢𜶣𜶤𜶥𜶦𜶧𜶨𜶩𜶪𜶫▂𜶬𜶭𜶮𜶯𜶰𜶱𜶲𜶳𜶴𜶵𜶶𜶷𜶸𜶹𜶺𜶻𜶼𜶽𜶾𜶿𜷀𜷁𜷂𜷃𜷄𜷅𜷆𜷇𜷈𜷉𜷊𜷋𜷌𜷍𜷎𜷏𜷐𜷑𜷒𜷓𜷔𜷕𜷖𜷗𜷘𜷙𜷚▄𜷛𜷜𜷝𜷞▙𜷟𜷠𜷡𜷢▟𜷣▆𜷤𜷥█"
                                                                                      
         return Segment( glyph_lut[offset], style )
 
@@ -165,16 +147,19 @@ class SextantCellRenderer( CellRenderer ):
     def _render_sextantcell(self, *, x: int, y: int, get_pixel: GetPixel) -> Segment:
         offset, style = self._get_glyph_info(x, y, get_pixel) 
        
-        glyph_lut = " 🬀🬁🬂🬃🬄🬅🬆🬇🬈🬉🬊🬋🬌🬍🬎🬏🬐🬑🬒🬓▌🬔🬕🬖🬗🬘🬙🬚🬛🬜🬝🬞🬟🬠🬡🬢🬣🬤🬥🬦🬧▐🬨🬩🬪🬫🬬🬭🬮🬯🬰🬱🬲🬳🬴🬵🬶🬷🬸🬹🬺🬻█"
+        if self.pips:
+            glyph_lut = " 𜹑𜹒𜹓𜹔𜹕𜹖𜹗𜹘𜹙𜹚𜹛𜹜𜹝𜹞𜹟𜹠𜹡𜹢𜹣𜹤𜹥𜹦𜹧𜹨𜹩𜹪𜹫𜹬𜹭𜹮𜹯𜹰𜹱𜹲𜹳𜹴𜹵𜹶𜹷𜹸𜹹𜹺𜹻𜹼𜹽𜹾𜹿𜺀𜺁𜺂𜺃𜺄𜺅𜺆𜺇𜺈𜺉𜺊𜺋𜺌𜺍𜺎𜺏"
+        else:
+            glyph_lut = " 🬀🬁🬂🬃🬄🬅🬆🬇🬈🬉🬊🬋🬌🬍🬎🬏🬐🬑🬒🬓▌🬔🬕🬖🬗🬘🬙🬚🬛🬜🬝🬞🬟🬠🬡🬢🬣🬤🬥🬦🬧▐🬨🬩🬪🬫🬬🬭🬮🬯🬰🬱🬲🬳🬴🬵🬶🬷🬸🬹🬺🬻█"
                                                                                      
         return Segment( glyph_lut[offset], style )
 
-class SextantGapRenderer( CellRenderer ):
-    """ Render to Block Sextant in Symbols for Legacy Computing Unicode block """
+class QuadrantCellRenderer( CellRenderer ):
+    """ Render to Block Quadtant in Symbols for Legacy Computing Unicode block """
 
     def __init__( self, *args, **kwargs ) -> None:
         super().__init__( *args, **kwargs )
-        self.y_pixels = kwargs.pop( 'y_pixels', 3 )
+        self.y_pixels = kwargs.pop( 'y_pixels', 2 )
 
     def _render_line(
             self, *, line_index: int, width: int, get_pixel: GetPixel
@@ -187,8 +172,10 @@ class SextantGapRenderer( CellRenderer ):
     def _render_sextantcell(self, *, x: int, y: int, get_pixel: GetPixel) -> Segment:
         offset, style = self._get_glyph_info(x, y, get_pixel) 
        
-       #glyph_lut = " 🬀🬁🬂🬃🬄🬅🬆🬇🬈🬉🬊🬋🬌🬍🬎🬏🬐🬑🬒🬓▌🬔🬕🬖🬗🬘🬙🬚🬛🬜🬝🬞🬟🬠🬡🬢🬣🬤🬥🬦🬧▐🬨🬩🬪🬫🬬🬭🬮🬯🬰🬱🬲🬳🬴🬵🬶🬷🬸🬹🬺🬻█"
-        glyph_lut = " 𜹑𜹒𜹓𜹔𜹕𜹖𜹗𜹘𜹙𜹚𜹛𜹜𜹝𜹞𜹟𜹠𜹡𜹢𜹣𜹤𜹥𜹦𜹧𜹨𜹩𜹪𜹫𜹬𜹭𜹮𜹯𜹰𜹱𜹲𜹳𜹴𜹵𜹶𜹷𜹸𜹹𜹺𜹻𜹼𜹽𜹾𜹿𜺀𜺁𜺂𜺃𜺄𜺅𜺆𜺇𜺈𜺉𜺊𜺋𜺌𜺍𜺎𜺏"
+        if self.pips:
+            glyph_lut = " 𜰡𜰢𜰣𜰤𜰥𜰦𜰧𜰨𜰩𜰪𜰫𜰬𜰭𜰮𜰯"
+        else:
+            glyph_lut = " ▘▝▀▖▌▞▛▗▚▐▜▄▙▟█"
                                                                                      
         return Segment( glyph_lut[offset], style )
 
@@ -228,31 +215,34 @@ class ToPixels( Pixels ):
 if __name__ == "__main__":
     cons = Console()
 
-    #sepsext = ""
-    #for char in range( 0x1CE50, 0x1CE90 ):
-    #    sepsext += chr( char )
-    #print( sepsext )
-    #brailles = ""
-    #for char in range( 0x2800, 0x2900 ):
-    #    brailles += chr( char )
-    #print( brailles )
+    #char = ""
+    #for point in range( 0x2800, 0x2900 ): #octant pips (braille, not row major)
+    #for point in range( 0x1CE50, 0x1CE90 ): #sextant pips
+    #for point in range( 0x1CC21, 0x1CC30 ): #quadrant pips
+    #    char += chr( point )
+    #print( char )
+
     #for char in string.ascii_uppercase:
     #    pixels = ToPixels.from_string(char, renderer=SextantCellRenderer())
     #    cons.print( pixels )
     #cons.print( ToPixels.from_string( "No Downunder", rotate=180, renderer=SextantCellRenderer() ) )
+    
     print( "(Normal terminal font for comparison :-)\n" )
-    #print( "Blue digits in DepartureMono  WOFF\n" )
-    #cons.print( ToPixels.from_string( string.digits, style="blue on default" ) )
-    print( "Braille Green digits in Terminus TTF\n" )
-    cons.print( ToPixels.from_string( string.digits, style="green on default", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=BrailleCellRenderer(mono=True) ) )
     print( "Octant green digits in Terminus TTF\n" )
     cons.print( ToPixels.from_string( string.digits, style="green on default", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=OctantCellRenderer(mono=True) ) )
+    print( "Octant pips(braille) green digits in Terminus TTF\n" )
+    cons.print( ToPixels.from_string( string.digits, style="green on default", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=OctantCellRenderer(mono=True, pips=True) ) )
     print( "Sextant green digits in Terminus TTF\n" )
     cons.print( ToPixels.from_string( string.digits, style="green on default", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=SextantCellRenderer(mono=True) ) )
-    print( "Sextant gap green digits in Terminus TTF\n" )
-    cons.print( ToPixels.from_string( string.digits, style="green on default", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=SextantGapRenderer(mono=True) ) )
-    #print( "Braille punchtape digits in Terminus TTF\n" )
-    #cons.print( ToPixels.from_string( string.digits, style="black on white", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=BrailleCellRenderer(mono=True) ) )
+    print( "Sextant pips green digits in Terminus TTF\n" )
+    cons.print( ToPixels.from_string( string.digits, style="green on default", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=SextantCellRenderer(mono=True, pips=True) ) )
+    print( "Quadrant green digits in Terminus TTF\n" )
+    cons.print( ToPixels.from_string( string.digits, style="green on default", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=QuadrantCellRenderer(mono=True) ) )
+    print( "Quadrant pips green digits in Terminus TTF\n" )
+    cons.print( ToPixels.from_string( string.digits, style="green on default", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=QuadrantCellRenderer(mono=True, pips=True) ) )
+    #print( "Blue digits in DepartureMono  WOFF\n" )
+    #cons.print( ToPixels.from_string( string.digits, style="blue on default" ) )
+
     #cons.print( Pixels.from_image_path("./textual_logo_light.png", resize=(42,42), renderer=BrailleCellRenderer(mono=True)) )
     #cons.print( ToPixels.from_string( "Hello Arctic", style="green on blue", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf" ) )
     #cons.print( Pixels.from_image_path("./north-pole.png", resize=(64,64), renderer=OctantCellRenderer()) )
