@@ -169,6 +169,29 @@ class SextantCellRenderer( CellRenderer ):
                                                                                      
         return Segment( glyph_lut[offset], style )
 
+class SextantGapRenderer( CellRenderer ):
+    """ Render to Block Sextant in Symbols for Legacy Computing Unicode block """
+
+    def __init__( self, *args, **kwargs ) -> None:
+        super().__init__( *args, **kwargs )
+        self.y_pixels = kwargs.pop( 'y_pixels', 3 )
+
+    def _render_line(
+            self, *, line_index: int, width: int, get_pixel: GetPixel
+            ) -> list[Segment]:
+        line = []
+        for x in range(0, width, self.x_pixels):
+            line.append(self._render_sextantcell(x=x, y=line_index, get_pixel=get_pixel))
+        return line
+
+    def _render_sextantcell(self, *, x: int, y: int, get_pixel: GetPixel) -> Segment:
+        offset, style = self._get_glyph_info(x, y, get_pixel) 
+       
+       #glyph_lut = " 🬀🬁🬂🬃🬄🬅🬆🬇🬈🬉🬊🬋🬌🬍🬎🬏🬐🬑🬒🬓▌🬔🬕🬖🬗🬘🬙🬚🬛🬜🬝🬞🬟🬠🬡🬢🬣🬤🬥🬦🬧▐🬨🬩🬪🬫🬬🬭🬮🬯🬰🬱🬲🬳🬴🬵🬶🬷🬸🬹🬺🬻█"
+        glyph_lut = " 𜹑𜹒𜹓𜹔𜹕𜹖𜹗𜹘𜹙𜹚𜹛𜹜𜹝𜹞𜹟𜹠𜹡𜹢𜹣𜹤𜹥𜹦𜹧𜹨𜹩𜹪𜹫𜹬𜹭𜹮𜹯𜹰𜹱𜹲𜹳𜹴𜹵𜹶𜹷𜹸𜹹𜹺𜹻𜹼𜹽𜹾𜹿𜺀𜺁𜺂𜺃𜺄𜺅𜺆𜺇𜺈𜺉𜺊𜺋𜺌𜺍𜺎𜺏"
+                                                                                     
+        return Segment( glyph_lut[offset], style )
+
 class ToPixels( Pixels ):
     """Extend Pixels to enable user specified font based string rendering with some PIL transforms"""
 
@@ -205,6 +228,10 @@ class ToPixels( Pixels ):
 if __name__ == "__main__":
     cons = Console()
 
+    #sepsext = ""
+    #for char in range( 0x1CE50, 0x1CE90 ):
+    #    sepsext += chr( char )
+    #print( sepsext )
     #brailles = ""
     #for char in range( 0x2800, 0x2900 ):
     #    brailles += chr( char )
@@ -216,11 +243,17 @@ if __name__ == "__main__":
     print( "(Normal terminal font for comparison :-)\n" )
     #print( "Blue digits in DepartureMono  WOFF\n" )
     #cons.print( ToPixels.from_string( string.digits, style="blue on default" ) )
-    print( "Green digits in Terminus TTF\n" )
+    print( "Braille Green digits in Terminus TTF\n" )
     cons.print( ToPixels.from_string( string.digits, style="green on default", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=BrailleCellRenderer(mono=True) ) )
-    print( "Braille punchtape digits in Terminus TTF\n" )
-    cons.print( ToPixels.from_string( string.digits, style="black on white", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=BrailleCellRenderer(mono=True) ) )
-    cons.print( Pixels.from_image_path("./textual_logo_light.png", resize=(42,42), renderer=BrailleCellRenderer(mono=True)) )
+    print( "Octant green digits in Terminus TTF\n" )
+    cons.print( ToPixels.from_string( string.digits, style="green on default", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=OctantCellRenderer(mono=True) ) )
+    print( "Sextant green digits in Terminus TTF\n" )
+    cons.print( ToPixels.from_string( string.digits, style="green on default", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=SextantCellRenderer(mono=True) ) )
+    print( "Sextant gap green digits in Terminus TTF\n" )
+    cons.print( ToPixels.from_string( string.digits, style="green on default", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=SextantGapRenderer(mono=True) ) )
+    #print( "Braille punchtape digits in Terminus TTF\n" )
+    #cons.print( ToPixels.from_string( string.digits, style="black on white", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=BrailleCellRenderer(mono=True) ) )
+    #cons.print( Pixels.from_image_path("./textual_logo_light.png", resize=(42,42), renderer=BrailleCellRenderer(mono=True)) )
     #cons.print( ToPixels.from_string( "Hello Arctic", style="green on blue", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf" ) )
     #cons.print( Pixels.from_image_path("./north-pole.png", resize=(64,64), renderer=OctantCellRenderer()) )
     #cons.print( ToPixels.from_string( "Hello Grace", style="yellow on default" ) )
