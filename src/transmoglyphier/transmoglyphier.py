@@ -44,7 +44,7 @@ class Transmoglyphier(App[None]):
         self.t_glyph = EnGlyph( self.test_string, Family="block/serif", id="test_glyphs")
         #yield EnGlyph( "Hello", Face="seven_segment", id="test_glyphs")
         yield Header()
-        with (vertical := Vertical()):
+        with (vertical := Vertical( id="testing" )):
             vertical.border_title = self.test_string
             with Horizontal():
                 yield Button("↻", id="cycle_glyphs")
@@ -80,7 +80,7 @@ class Transmoglyphier(App[None]):
     def show_tests( self ) -> None:
         if self.input.value not in self.test_list:
             self.test_list.append( self.input.value )
-        self.query_one("Vertical").border_title = self.input.value
+        self.query_one("#testing").border_title = self.input.value
         self.t_glyph.update(self.input.value)
 
     @on( Button.Pressed )

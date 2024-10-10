@@ -187,7 +187,6 @@ class ToPixels( Pixels ):
             phrase: str = "",
             style: str | Style | None = "default on default",
             renderer: Renderer = OctantCellRenderer(), 
-            rotate: float = 0.0,
             font_size: int = 11,
             font_path: str = "./DepartureMono-Regular.woff"
             ) -> Pixels:
@@ -198,12 +197,11 @@ class ToPixels( Pixels ):
         font = ImageFont.truetype( font_path, size=font_size )
         l,t,r,b = font.getbbox( phrase )
         pane = Image.new( '1', (r,b) )
-        canvas = ImageDraw.Draw( pane )
         mask = [x for x in font.getmask(phrase, mode='1')]
+        print( (r,b) )
+        print( mask )
         pane.putdata(mask)
         #pane.show()
-        if rotate != 0:
-            pane = pane.rotate(rotate, Image.NEAREST, expand = 1)
         segments = Pixels._segments_from_image(pane, renderer=renderer )
         restyle_segments = []
         for segment in segments:
@@ -225,26 +223,25 @@ if __name__ == "__main__":
     #for char in string.ascii_uppercase:
     #    pixels = ToPixels.from_string(char, renderer=SextantCellRenderer())
     #    cons.print( pixels )
-    #cons.print( ToPixels.from_string( "No Downunder", rotate=180, renderer=SextantCellRenderer() ) )
     
-    print( "(Normal terminal font for comparison :-)\n" )
-    print( "Octant green digits in Terminus TTF\n" )
-    cons.print( ToPixels.from_string( string.digits, style="green on default", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=OctantCellRenderer(mono=True) ) )
-    print( "Octant pips(braille) green digits in Terminus TTF\n" )
-    cons.print( ToPixels.from_string( string.digits, style="green on default", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=OctantCellRenderer(mono=True, pips=True) ) )
-    print( "Sextant green digits in Terminus TTF\n" )
-    cons.print( ToPixels.from_string( string.digits, style="green on default", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=SextantCellRenderer(mono=True) ) )
-    print( "Sextant pips green digits in Terminus TTF\n" )
-    cons.print( ToPixels.from_string( string.digits, style="green on default", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=SextantCellRenderer(mono=True, pips=True) ) )
-    print( "Quadrant green digits in Terminus TTF\n" )
-    cons.print( ToPixels.from_string( string.digits, style="green on default", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=QuadrantCellRenderer(mono=True) ) )
-    print( "Quadrant pips green digits in Terminus TTF\n" )
-    cons.print( ToPixels.from_string( string.digits, style="green on default", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=QuadrantCellRenderer(mono=True, pips=True) ) )
+    #print( "(Normal terminal font for comparison :-)\n" )
+    #print( "Octant green digits in Terminus TTF\n" )
+    #cons.print( ToPixels.from_string( string.digits, style="green on default", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=OctantCellRenderer(mono=True) ) )
+    #print( "Octant pips(braille) green digits in Terminus TTF\n" )
+    #cons.print( ToPixels.from_string( string.digits, style="green on default", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=OctantCellRenderer(mono=True, pips=True) ) )
+    #print( "Sextant green digits in Terminus TTF\n" )
+    #cons.print( ToPixels.from_string( string.digits, style="green on default", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=SextantCellRenderer(mono=True) ) )
+    #print( "Sextant pips green digits in Terminus TTF\n" )
+    #cons.print( ToPixels.from_string( string.digits, style="green on default", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=SextantCellRenderer(mono=True, pips=True) ) )
+    #print( "Quadrant green digits in Terminus TTF\n" )
+    #cons.print( ToPixels.from_string( string.digits, style="green on default", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=QuadrantCellRenderer(mono=True) ) )
+    #print( "Quadrant pips green digits in Terminus TTF\n" )
+    #cons.print( ToPixels.from_string( string.digits, style="green on default", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf", renderer=QuadrantCellRenderer(mono=True, pips=True) ) )
     #print( "Blue digits in DepartureMono  WOFF\n" )
     #cons.print( ToPixels.from_string( string.digits, style="blue on default" ) )
 
     #cons.print( Pixels.from_image_path("./textual_logo_light.png", resize=(42,42), renderer=BrailleCellRenderer(mono=True)) )
-    #cons.print( ToPixels.from_string( "Hello Arctic", style="green on blue", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf" ) )
+    cons.print( ToPixels.from_string( "8.1", style="green on blue", font_size=12, font_path="/usr/share/fonts/truetype/terminus/TerminusTTF-4.46.0.ttf" ) )
     #cons.print( Pixels.from_image_path("./north-pole.png", resize=(64,64), renderer=OctantCellRenderer()) )
     #cons.print( ToPixels.from_string( "Hello Grace", style="yellow on default" ) )
     #cons.print( Pixels.from_image_path("./240px-Grace_M._Hopper.jpg", resize=(80,80), renderer=OctantCellRenderer()) )
